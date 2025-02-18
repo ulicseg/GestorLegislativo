@@ -1,0 +1,223 @@
+{% extends 'base.html' %}
+
+{% block title %}Proyectos Legislativos{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h4 class="mb-0">
+        <i class="fas fa-folder-open me-2"></i>Lista de proyectos
+    </h4>
+    {% if not user.perfil.es_diputada %}
+        <a href="{% url 'proyectos:crear_proyecto' %}" class="btn btn-primary">
+            <i class="fas fa-plus me-2"></i>Nuevo proyecto
+        </a>
+    {% endif %}
+</div>
+
+<!-- Filtros -->
+<div class="card shadow-sm mb-4">
+    <div class="card-body">
+        <form method="get" class="row g-3">
+            <div class="{% if user.perfil.es_diputada %}col-md-5{% else %}col-md-10{% endif %}">
+                <div class="input-group">
+                    <span class="input-group-text bg-light">
+                        <i class="fas fa-search text-muted"></i>
+                    </span>
+                    {{ filter_form.busqueda }}
+                </div>
+            </div>
+            {% if user.perfil.es_diputada %}
+                <div class="col-md-5">
+                    <div class="input-group">
+                        <span class="input-group-text bg-light">
+                            <i class="fas fa-tag text-muted"></i>
+                        </span>
+                        {{ filter_form.categoria }}
+                    </div>
+                </div>
+            {% endif %}
+            <div class="{% if user.perfil.es_diputada %}col-md-2{% else %}col-md-2{% endif %}">
+                <button type="submit" class="btn btn-primary w-100">
+                    Filtrar
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Lista de Proyectos -->
+<div class="row">
+    {% for proyecto in proyectos %}
+        <div class="col-md-6 mb-4">
+            <div class="card mb-4 shadow-sm">
+                <div class="card-body">
+                    <h5 class="card-title text-primary fw-bold">
+                        {{ proyecto.titulo }}
+                        <span class="badge bg-light ms-2" style="font-size: 0.8rem; background-color: #965a0091 !important;">
+                            {{ proyecto.categoria.nombre }}
+                        </span>
+                    </h5>
+                    <p class="card-text text-muted">{{ proyecto.descripcion|striptags|truncatewords:20 }}</p>
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div class="text-muted small">
+                            <i class="fas fa-user me-1"></i>{{ proyecto.creado_por.get_full_name }}
+                            <br>
+                            <i class="fas fa-calendar me-1"></i>{{ proyecto.fecha_creacion|date:"d/m/Y H:i" }}
+                        </div>
+                        <div class="btn-group">
+                            <a href="{% url 'proyectos:detalle_proyecto' proyecto.pk %}" class="btn btn-primary btn-sm">
+                                <i class="fas fa-eye me-1"></i>Ver detalles
+                            </a>
+                            {% if user == proyecto.creado_por %}
+                                <a href="{% url 'proyectos:editar_proyecto' proyecto.pk %}" class="btn btn-warning btn-sm" style="background-color: #b36b0191; border-color: #000000;">
+                                    <i class="fas fa-edit me-1"></i>Editar
+                                </a>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    {% empty %}
+        <div class="col-12">
+            <div class="alert alert-info text-center">
+                <i class="fas fa-info-circle me-2"></i>No hay proyectos disponibles.
+            </div>
+        </div>
+    {% endfor %}
+</div>
+
+<!-- Paginación -->
+{% if proyectos.has_other_pages %}
+<nav aria-label="Navegación de páginas" class="mt-4">
+    <ul class="pagination justify-content-center">
+        {% if proyectos.has_previous %}
+            <li class="page-item">
+                <a class="page-link" href="?page={{ proyectos.previous_page_number }}{% if request.GET.busqueda %}&busqueda={{ request.GET.busqueda }}{% endif %}{% if request.GET.categoria %}&categoria={{ request.GET.categoria }}{% endif %}">
+                    <i class="fas fa-chevron-left"></i>
+                </a>
+            </li>
+        {% else %}
+            <li class="page-item disabled">
+                <span class="page-link">
+                    <i class="fas fa-chevron-left"></i>
+                </span>
+            </li>
+        {% endif %}
+
+        {% for i in proyectos.paginator.page_range %}
+            {% if proyectos.number == i %}
+                <li class="page-item active">
+                    <span class="page-link">{{ i }}</span>
+                </li>
+            {% else %}
+                <li class="page-item">
+                    <a class="page-link" href="?page={{ i }}{% if request.GET.busqueda %}&busqueda={{ request.GET.busqueda }}{% endif %}{% if request.GET.categoria %}&categoria={{ request.GET.categoria }}{% endif %}">{{ i }}</a>
+                </li>
+            {% endif %}
+        {% endfor %}
+
+        {% if proyectos.has_next %}
+            <li class="page-item">
+                <a class="page-link" href="?page={{ proyectos.next_page_number }}{% if request.GET.busqueda %}&busqueda={{ request.GET.busqueda }}{% endif %}{% if request.GET.categoria %}&categoria={{ request.GET.categoria }}{% endif %}">
+                    <i class="fas fa-chevron-right"></i>
+                </a>
+            </li>
+        {% else %}
+            <li class="page-item disabled">
+                <span class="page-link">
+                    <i class="fas fa-chevron-right"></i>
+                </span>
+            </li>
+        {% endif %}
+    </ul>
+</nav>
+{% endif %}
+
+<!-- Agregar estos estilos específicos para los botones en las cards -->
+<style>
+    .btn-custom {
+        padding: 0.5rem 1rem;
+        border-radius: 6px;
+        transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        width: 150px;
+        height: 52px;
+        position: relative;
+        overflow: hidden;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border: none;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+    }
+
+    /* Estilos para el botón primario */
+    .btn-primary.btn-custom {
+        background: linear-gradient(145deg, var(--accent-color), var(--primary-color));
+    }
+
+    /* Estilos para el botón warning (editar) */
+    .btn-warning.btn-custom {
+        background: linear-gradient(145deg, #d68a10, #945e0c);
+        color: white;
+    }
+
+    .btn-warning.btn-custom::before {
+        background: linear-gradient(145deg, #945e0c, #d68a10);
+    }
+
+    .btn-custom .btn-content {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 6px;
+        position: relative;
+        z-index: 1;
+        transition: all 0.4s ease;
+        width: 100%;
+        padding: 0 0.5rem;
+    }
+
+    .btn-custom i {
+        font-size: 1rem;
+        transition: all 0.4s ease;
+    }
+
+    .btn-custom span {
+        font-weight: 500;
+        font-size: 0.8rem;
+        transition: all 0.4s ease;
+        white-space: nowrap;
+    }
+
+    .btn-custom::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        opacity: 0;
+        transition: opacity 0.4s ease;
+    }
+
+    .btn-custom:hover::before {
+        opacity: 1;
+    }
+
+    .btn-custom:hover {
+        transform: translateY(-4px) scale(1.02);
+        box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+    }
+
+    .btn-custom:hover .btn-content {
+        transform: scale(1.05);
+    }
+
+    .btn-custom:active {
+        transform: translateY(2px);
+        box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+    }
+</style>
+{% endblock %}

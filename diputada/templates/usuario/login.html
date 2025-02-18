@@ -1,0 +1,43 @@
+{% extends 'base.html' %}
+
+{% block title %}Iniciar Sesión{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-6 col-lg-4">
+        <div class="card shadow-sm">
+            <div class="card-header text-center py-4">
+                <i class="fas fa-landmark fa-2x mb-2 text-primary"></i>
+                <h4 class="mb-0">Iniciar Sesión</h4>
+            </div>
+            <div class="card-body p-4">
+                {% if messages %}
+                {% endif %}
+                
+                <form method="post">
+                    {% csrf_token %}
+                    <div class="mb-3">
+                        <label for="username" class="form-label">
+                            <i class="fas fa-user text-muted me-2"></i>Usuario
+                        </label>
+                        <input type="text" class="form-control" id="username" name="username" required 
+                               placeholder="Ingrese su usuario">
+                    </div>
+                    <div class="mb-4">
+                        <label for="password" class="form-label">
+                            <i class="fas fa-lock text-muted me-2"></i>Contraseña
+                        </label>
+                        <input type="password" class="form-control" id="password" name="password" required 
+                               placeholder="Ingrese su contraseña">
+                    </div>
+                    <div class="d-grid">
+                        <button type="submit" class="btn btn-primary py-2">
+                            <i class="fas fa-sign-in-alt me-2"></i>Ingresar
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,554 @@
+{% extends 'base.html' %}
+
+{% block title %}Gestión de Usuarios{% endblock %}
+
+{% block content %}
+<div class="row">
+    <!-- Panel de Categorías (solo visible para superuser) -->
+    {% if is_superuser %}
+    <div class="col-md-4 mb-4">
+        <div class="card shadow-sm">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="mb-0">
+                    <i class="fas fa-tags me-2"></i>Categorías
+                </h5>
+                <button class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#nuevaCategoria">
+                    <i class="fas fa-plus me-1"></i>Nueva
+                </button>
+            </div>
+            <div class="card-body p-0">
+                <div class="list-group list-group-flush">
+                    {% for categoria in categorias %}
+                    <div class="list-group-item">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <h6 class="mb-1">{{ categoria.nombre }}</h6>
+                                <small class="text-muted">{{ categoria.descripcion|truncatechars:50 }}</small>
+                            </div>
+                            <div class="btn-group">
+                                <button class="btn btn-sm btn-outline-primary btn-action" 
+                                        data-bs-toggle="modal" 
+                                        data-bs-target="#editarCategoria{{ categoria.id }}"
+                                        title="Editar">
+                                    <i class="fas fa-edit"></i>
+                                </button>
+                                <button class="btn btn-sm btn-outline-danger btn-action" 
+                                        data-bs-toggle="modal" 
+                                        data-bs-target="#eliminarCategoria{{ categoria.id }}"
+                                        title="Eliminar">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    {% empty %}
+                    <div class="text-center p-4">
+                        <i class="fas fa-folder-open text-muted mb-2" style="font-size: 2rem;"></i>
+                        <p class="text-muted mb-0">No hay categorías registradas</p>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Panel de Asesores -->
+    <div class="col-md-{% if is_superuser %}8{% else %}12{% endif %}">
+        <div class="card shadow-sm">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="mb-0">
+                    <i class="fas fa-users me-2"></i>Asesores
+                </h5>
+                <div>
+                    <button class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#nuevoAsesor">
+                        <i class="fas fa-user-plus me-1"></i>Nuevo Asesor
+                    </button>
+                    {% if is_superuser %}
+                        <button class="btn btn-success btn-sm ms-2" data-bs-toggle="modal" data-bs-target="#nuevaDiputada">
+                            <i class="fas fa-user-tie me-1"></i>Nueva Diputada
+                        </button>
+                    {% endif %}
+                </div>
+            </div>
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0">
+                        <thead>
+                            <tr>
+                                <th>Nombre</th>
+                                <th>Usuario</th>
+                                <th>Email</th>
+                                <th>Categoría</th>
+                                <th class="text-end">Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for asesor in asesores %}
+                            <tr>
+                                <td>
+                                    <div class="d-flex align-items-center">
+                                        <i class="fas fa-user-circle text-muted me-2"></i>
+                                        {{ asesor.get_full_name }}
+                                    </div>
+                                </td>
+                                <td>{{ asesor.username }}</td>
+                                <td>{{ asesor.email }}</td>
+                                <td>
+                                    {% if asesor.perfil.categoria %}
+                                        <span class="badge" style="background-color: #965a0091; color: white;">
+                                            {{ asesor.perfil.categoria.nombre }}
+                                        </span>
+                                    {% else %}
+                                        <span class="badge bg-secondary">Sin categoría</span>
+                                    {% endif %}
+                                </td>
+                                <td class="text-end">
+                                    <button class="btn btn-sm btn-outline-primary btn-action" 
+                                            data-bs-toggle="modal" 
+                                            data-bs-target="#editarAsesor{{ asesor.id }}"
+                                            title="Editar">
+                                        <i class="fas fa-edit"></i>
+                                    </button>
+                                    <button class="btn btn-sm btn-outline-danger btn-action" 
+                                            data-bs-toggle="modal" 
+                                            data-bs-target="#eliminarAsesor{{ asesor.id }}"
+                                            title="Eliminar">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                </td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="5" class="text-center py-4">
+                                    <i class="fas fa-users text-muted mb-2" style="font-size: 2rem;"></i>
+                                    <p class="text-muted mb-0">No hay asesores registrados</p>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Nuevo Asesor -->
+<div class="modal fade" id="nuevoAsesor" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    <i class="fas fa-user-plus me-2"></i>Nuevo Asesor
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form method="post" action="{% url 'usuario:crear_asesor' %}">
+                {% csrf_token %}
+                <div class="modal-body">
+                    <!-- Nombre y Apellido en una línea -->
+                    <div class="row mb-3">
+                        <div class="col">
+                            <label class="form-label">Nombre</label>
+                            <input type="text" name="first_name" class="form-control" required>
+                        </div>
+                        <div class="col">
+                            <label class="form-label">Apellido</label>
+                            <input type="text" name="last_name" class="form-control" required>
+                        </div>
+                    </div>
+
+                    <!-- Usuario y Email -->
+                    <div class="mb-3">
+                        <label class="form-label">Usuario</label>
+                        <input type="text" name="username" class="form-control" required>
+                        <div class="form-text">Puede contener letras, números y @/./+/-/_</div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">Email</label>
+                        <input type="email" name="email" class="form-control" required>
+                    </div>
+
+                    <!-- Contraseñas en la misma línea -->
+                    <div class="row mb-3">
+                        <div class="col">
+                            <label class="form-label">Contraseña</label>
+                            <input type="password" name="password1" class="form-control" required>
+                            <div class="form-text">Mínimo 8 caracteres</div>
+                        </div>
+                        <div class="col">
+                            <label class="form-label">Confirmar Contraseña</label>
+                            <input type="password" name="password2" class="form-control" required>
+                        </div>
+                    </div>
+
+                    <!-- Categoría -->
+                    <div class="mb-3">
+                        <label class="form-label">Categoría</label>
+                        <select name="categoria" class="form-select" required>
+                            <option value="">Seleccione una categoría</option>
+                            {% for categoria in categorias %}
+                                <option value="{{ categoria.id }}">{{ categoria.nombre }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-save me-2"></i>Guardar
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Modales para editar asesores -->
+{% for asesor in asesores %}
+<div class="modal fade" id="editarAsesor{{ asesor.id }}" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Editar Asesor</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form method="post" action="{% url 'usuario:editar_asesor' asesor.id %}">
+                {% csrf_token %}
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label for="first_name{{ asesor.id }}" class="form-label">Nombre</label>
+                        <input type="text" class="form-control" id="first_name{{ asesor.id }}" 
+                               name="first_name" value="{{ asesor.first_name }}" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="last_name{{ asesor.id }}" class="form-label">Apellido</label>
+                        <input type="text" class="form-control" id="last_name{{ asesor.id }}" 
+                               name="last_name" value="{{ asesor.last_name }}" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="email{{ asesor.id }}" class="form-label">Email</label>
+                        <input type="email" class="form-control" id="email{{ asesor.id }}" 
+                               name="email" value="{{ asesor.email }}" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="categoria{{ asesor.id }}" class="form-label">Categoría</label>
+                        <select class="form-control" id="categoria{{ asesor.id }}" name="categoria" required>
+                            {% for categoria in categorias %}
+                                <option value="{{ categoria.id }}" 
+                                    {% if asesor.perfil.categoria_id == categoria.id %}selected{% endif %}>
+                                    {{ categoria.nombre }}
+                                </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" class="btn btn-primary">Guardar cambios</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Modal para eliminar asesor -->
+<div class="modal fade" id="eliminarAsesor{{ asesor.id }}" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Eliminar Asesor</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p>¿Está seguro que desea eliminar al asesor {{ asesor.get_full_name }}?</p>
+                <p class="text-danger"><small>Esta acción no se puede deshacer.</small></p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <form method="post" action="{% url 'usuario:eliminar_asesor' asesor.pk %}" class="d-inline">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-danger">Eliminar</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endfor %}
+
+<!-- Modales para Categorías (solo para superuser) -->
+{% if is_superuser %}
+<!-- Modal Nueva Categoría -->
+<div class="modal fade" id="nuevaCategoria" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Nueva Categoría</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form method="post" action="{% url 'usuario:crear_categoria' %}">
+                {% csrf_token %}
+                <div class="modal-body">
+                    {% for field in form_categoria %}
+                    <div class="mb-3">
+                        <label for="{{ field.id_for_label }}" class="form-label">{{ field.label }}</label>
+                        {{ field }}
+                        {% if field.help_text %}
+                            <div class="form-text">{{ field.help_text }}</div>
+                        {% endif %}
+                    </div>
+                    {% endfor %}
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" class="btn btn-primary">Guardar</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Modales para editar y eliminar categorías -->
+{% for categoria in categorias %}
+<!-- Modal Editar Categoría -->
+<div class="modal fade" id="editarCategoria{{ categoria.id }}" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Editar Categoría</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form method="post" action="{% url 'usuario:editar_categoria' categoria.id %}">
+                {% csrf_token %}
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label for="nombre{{ categoria.id }}" class="form-label">Nombre</label>
+                        <input type="text" class="form-control" id="nombre{{ categoria.id }}" 
+                               name="nombre" value="{{ categoria.nombre }}" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="descripcion{{ categoria.id }}" class="form-label">Descripción</label>
+                        <textarea class="form-control" id="descripcion{{ categoria.id }}" 
+                                  name="descripcion" rows="3">{{ categoria.descripcion }}</textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" class="btn btn-primary">Guardar cambios</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Eliminar Categoría -->
+<div class="modal fade" id="eliminarCategoria{{ categoria.id }}" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Eliminar Categoría</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p>¿Está seguro que desea eliminar la categoría "{{ categoria.nombre }}"?</p>
+                <p class="text-danger">
+                    <small>Esta acción no se puede deshacer y podría afectar a los asesores asignados a esta categoría.</small>
+                </p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <form method="post" action="{% url 'usuario:eliminar_categoria' categoria.id %}" class="d-inline">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-danger">Eliminar</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endfor %}
+
+<!-- Modal Nueva Diputada -->
+<div class="modal fade" id="nuevaDiputada" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Nueva Diputada</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form method="post" action="{% url 'usuario:crear_diputada' %}">
+                {% csrf_token %}
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label for="username" class="form-label">Nombre de Usuario</label>
+                        <input type="text" class="form-control" id="username" name="username" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="first_name" class="form-label">Nombre</label>
+                        <input type="text" class="form-control" id="first_name" name="first_name" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="last_name" class="form-label">Apellido</label>
+                        <input type="text" class="form-control" id="last_name" name="last_name" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="email" class="form-label">Email</label>
+                        <input type="email" class="form-control" id="email" name="email" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="password1" class="form-label">Contraseña</label>
+                        <input type="password" class="form-control" id="password1" name="password1" required>
+                        <div class="form-text">La contraseña debe tener al menos 8 caracteres.</div>
+                    </div>
+                    <div class="mb-3">
+                        <label for="password2" class="form-label">Confirmar Contraseña</label>
+                        <input type="password" class="form-control" id="password2" name="password2" required>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" class="btn btn-primary">Guardar</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<!-- Después del script anterior -->
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const form = document.querySelector('#nuevoAsesor form');
+    const password1 = form.querySelector('input[name="password1"]');
+    const password2 = form.querySelector('input[name="password2"]');
+    const submitButton = form.querySelector('button[type="submit"]');
+    
+    // Función para validar la fortaleza de la contraseña
+    function validarFortaleza(password) {
+        const minLength = 8;
+        const hasNumber = /\d/.test(password);
+        const hasLetter = /[a-zA-Z]/.test(password);
+        
+        let mensajes = [];
+        if (password.length < minLength) {
+            mensajes.push(`Mínimo ${minLength} caracteres`);
+        }
+        if (!hasNumber) {
+            mensajes.push('Debe incluir números');
+        }
+        if (!hasLetter) {
+            mensajes.push('Debe incluir letras');
+        }
+        return mensajes;
+    }
+
+    // Función para mostrar mensajes de error
+    function mostrarError(input, mensaje) {
+        const existingFeedback = input.nextElementSibling;
+        if (existingFeedback && existingFeedback.classList.contains('invalid-feedback')) {
+            existingFeedback.textContent = mensaje;
+        } else {
+            const feedback = document.createElement('div');
+            feedback.className = 'invalid-feedback d-block';
+            feedback.textContent = mensaje;
+            input.parentNode.insertBefore(feedback, input.nextSibling);
+        }
+        input.classList.add('is-invalid');
+    }
+
+    // Función para limpiar mensajes de error
+    function limpiarError(input) {
+        const feedback = input.nextElementSibling;
+        if (feedback && feedback.classList.contains('invalid-feedback')) {
+            feedback.remove();
+        }
+        input.classList.remove('is-invalid');
+        input.classList.add('is-valid');
+    }
+
+    // Validar contraseña mientras se escribe
+    password1.addEventListener('input', function() {
+        const errores = validarFortaleza(this.value);
+        if (errores.length > 0) {
+            mostrarError(this, errores.join(' | '));
+            submitButton.disabled = true;
+        } else {
+            limpiarError(this);
+            // Validar coincidencia si password2 tiene valor
+            if (password2.value) {
+                validarCoincidencia();
+            }
+        }
+    });
+
+    // Validar coincidencia de contraseñas
+    function validarCoincidencia() {
+        if (password1.value !== password2.value) {
+            mostrarError(password2, 'Las contraseñas no coinciden');
+            submitButton.disabled = true;
+            return false;
+        } else if (password1.value && !password1.classList.contains('is-invalid')) {
+            limpiarError(password2);
+            submitButton.disabled = false;
+            return true;
+        }
+    }
+
+    password2.addEventListener('input', validarCoincidencia);
+
+    // Validar antes de enviar el formulario
+    form.addEventListener('submit', function(e) {
+        const erroresPassword = validarFortaleza(password1.value);
+        if (erroresPassword.length > 0) {
+            e.preventDefault();
+            mostrarError(password1, erroresPassword.join(' | '));
+        } else if (!validarCoincidencia()) {
+            e.preventDefault();
+        }
+    });
+});
+</script>
+
+<style>
+.invalid-feedback {
+    color: #dc3545;
+    font-size: 0.875em;
+    margin-top: 0.25rem;
+}
+.is-invalid {
+    border-color: #dc3545;
+}
+.is-valid {
+    border-color: #198754;
+}
+
+@media (max-width: 768px) {
+    .table-responsive {
+        font-size: 0.9rem;
+    }
+
+    .btn-action {
+        padding: 0.25rem 0.5rem;
+    }
+
+    .table td, .table th {
+        padding: 0.5rem;
+    }
+
+    .modal-dialog {
+        margin: 0.5rem;
+    }
+
+    .btn-group-sm {
+        display: flex;
+        flex-direction: column;
+        gap: 0.5rem;
+    }
+
+    .btn-group-sm .btn {
+        width: 100%;
+    }
+}
+</style>
+{% endblock %}

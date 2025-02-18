@@ -1,0 +1,187 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ proyecto.titulo }}{% endblock %}
+
+{% block content %}
+<div class="card shadow-sm mb-4">
+    <!-- Encabezado del proyecto -->
+    <div class="card-header bg-light">
+        <div class="d-flex justify-content-between align-items-center">
+            <div>
+                <h4 class="mb-1">{{ proyecto.titulo }}</h4>
+                <div class="text-muted small">
+                    <span class="me-3">
+                        <i class="fas fa-user me-1"></i>{{ proyecto.creado_por.get_full_name }}
+                    </span>
+                    <span class="me-3">
+                        <i class="fas fa-calendar me-1"></i>{{ proyecto.fecha_creacion|date:"d/m/Y" }}
+                    </span>
+                    <span class="badge bg-info" style="background-color: #965a0091 !important;">
+                        <i class="fas fa-tag me-1"></i>{{ proyecto.categoria.nombre }}
+                    </span>
+                </div>
+            </div>
+            <div class="d-flex gap-2">
+                {% if user == proyecto.creado_por %}
+                    <button class="btn btn-danger btn-sm" 
+                            data-bs-toggle="modal" 
+                            data-bs-target="#eliminarProyecto">
+                        <i class="fas fa-trash-alt me-1"></i>Eliminar Proyecto
+                    </button>
+                {% endif %}
+                <a href="{% url 'proyectos:lista_proyectos' %}" class="btn btn-primary btn-sm">
+                    <i class="fas fa-arrow-left me-1"></i>Volver
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Descripción del proyecto -->
+    <div class="card-body bg-light border-bottom">
+        <div class="proyecto-descripcion">
+            <h4>Descripción del proyecto</h4>
+            {{ proyecto.descripcion|safe }}
+        </div>
+    </div>
+
+    <!-- Timeline de actualizaciones -->
+    <div class="card-body">
+        <h5 class="mb-4">
+            <i class="fas fa-history me-2"></i>Historial de Actualizaciones
+        </h5>
+
+        {% if not user.perfil.es_diputada and user.perfil.categoria == proyecto.categoria %}
+            <div class="card mb-4 border-primary">
+                <div class="card-header bg-primary text-white">
+                    <i class="fas fa-plus-circle me-2"></i>Nueva Actualización
+                </div>
+                <div class="card-body">
+                    <form method="post" action="{% url 'proyectos:crear_actualizacion' proyecto.pk %}">
+                        {% csrf_token %}
+                        <div class="mb-3">
+                            {{ form_actualizacion.media }}
+                            {{ form_actualizacion.contenido }}
+                            {% if form_actualizacion.contenido.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {{ form_actualizacion.contenido.errors }}
+                                </div>
+                            {% endif %}
+                        </div>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-save me-2"></i>Guardar Actualización
+                        </button>
+                    </form>
+                </div>
+            </div>
+        {% endif %}
+
+        <div class="timeline">
+            {% for actualizacion in actualizaciones %}
+                <div class="timeline-item">
+                    <div class="timeline-marker"></div>
+                    <div class="timeline-content">
+                        <div class="card mb-3">
+                            <div class="card-header bg-light py-2">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <small class="text-muted">
+                                        <span class="fw-medium">{{ actualizacion.autor.get_full_name }}</span>
+                                        - {{ actualizacion.fecha|date:"d/m/Y H:i" }}
+                                    </small>
+                                    {% if user == actualizacion.autor or user.perfil.es_diputada %}
+                                        <button class="btn btn-sm btn-outline-danger" 
+                                                data-bs-toggle="modal" 
+                                                data-bs-target="#eliminarActualizacion{{ actualizacion.id }}">
+                                            <i class="fas fa-trash-alt"></i>
+                                        </button>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            <div class="card-body py-2">
+                                {{ actualizacion.contenido|safe }}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            {% empty %}
+                <div class="text-center text-muted my-4">
+                    <i class="fas fa-info-circle me-1"></i>
+                    No hay actualizaciones registradas
+                </div>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+
+<style>
+    .proyecto-descripcion {
+        background-color: #f8f9fa;
+        padding: 1rem;
+        border-radius: 6px;
+    }
+
+    .timeline {
+        position: relative;
+        padding-left: 3rem;
+    }
+
+    .timeline::before {
+        content: '';
+        position: absolute;
+        left: 1rem;
+        top: 0;
+        bottom: 0;
+        width: 2px;
+        background: #e9ecef;
+    }
+
+    .timeline-item {
+        position: relative;
+        margin-bottom: 1.5rem;
+    }
+
+    .timeline-marker {
+        position: absolute;
+        left: -3rem;
+        width: 1rem;
+        height: 1rem;
+        border-radius: 50%;
+        background: var(--primary-color);
+        border: 2px solid #fff;
+        box-shadow: 0 0 0 2px var(--primary-color);
+    }
+
+    .timeline-content {
+        margin-left: 0.5rem;
+    }
+
+    .card-header.bg-light {
+        background-color: #f8f9fa !important;
+    }
+</style>
+
+<!-- Modales de eliminación (sin cambios) -->
+{% if user == proyecto.creado_por %}
+<div class="modal fade" id="eliminarProyecto" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Confirmar Eliminación</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p class="mb-0">¿Estás seguro que deseas eliminar este proyecto? Esta acción no se puede deshacer.</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <form method="post" action="{% url 'proyectos:eliminar_proyecto' proyecto.pk %}">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-danger">
+                        <i class="fas fa-trash-alt me-2"></i>Eliminar
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+{% endblock %}
