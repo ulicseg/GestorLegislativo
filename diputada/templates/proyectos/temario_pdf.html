@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <style>
+        @page {
+            size: letter;
+            margin: 2.5cm;
+            @top-center {
+                content: "Temario #{{ temario.numero }} - {{ temario.comision.nombre }}";
+                font-size: 9pt;
+            }
+            @bottom-right {
+                content: "Página " counter(page) " de " counter(pages);
+                font-size: 9pt;
+            }
+        }
+        body {
+            font-family: Arial, sans-serif;
+            line-height: 1.5;
+        }
+        .header {
+            text-align: center;
+            margin-bottom: 2em;
+        }
+        .proyecto {
+            margin-bottom: 2em;
+            page-break-inside: avoid;
+        }
+        .proyecto-titulo {
+            background-color: #f0f0f0;
+            padding: 0.5em;
+            margin-bottom: 1em;
+        }
+        .proyecto-descripcion {
+            margin-bottom: 1em;
+            text-align: justify;
+        }
+        .actualizaciones {
+            margin-left: 1em;
+            border-left: 2px solid #ccc;
+            padding-left: 1em;
+        }
+        .meta-info {
+            color: #666;
+            font-size: 0.9em;
+            margin-bottom: 1em;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>Temario #{{ temario.numero }}</h1>
+        <h2>{{ temario.comision.nombre }}</h2>
+        <div class="meta-info">
+            Creado el {{ temario.fecha_creacion|date:"d/m/Y" }} por {{ temario.creado_por.get_full_name }}
+        </div>
+    </div>
+
+    {% for pt in proyectos_temario %}
+    <div class="proyecto">
+        <div class="proyecto-titulo">
+            <h3>{{ pt.orden }}. {{ pt.proyecto.titulo }}</h3>
+        </div>
+        <div class="proyecto-descripcion">
+            {{ pt.proyecto.descripcion|safe }}
+        </div>
+        <div class="actualizaciones">
+            <h4>Últimas actualizaciones:</h4>
+            {% for actualizacion in pt.proyecto.actualizaciones.all %}
+            <div class="actualizacion">
+                <div class="meta-info">
+                    {{ actualizacion.autor.get_full_name }} - {{ actualizacion.fecha|date:"d/m/Y H:i" }}
+                </div>
+                <div>{{ actualizacion.contenido|safe }}</div>
+            </div>
+            {% empty %}
+            <p>No hay actualizaciones registradas</p>
+            {% endfor %}
+        </div>
+    </div>
+    {% endfor %}
+</body>
+</html> 

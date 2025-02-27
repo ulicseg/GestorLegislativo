@@ -12,9 +12,11 @@
                 <h5 class="mb-0">
                     <i class="fas fa-tags me-2"></i>Categorías
                 </h5>
-                <button class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#nuevaCategoria">
-                    <i class="fas fa-plus me-1"></i>Nueva
-                </button>
+                {% if user.is_superuser or user.perfil.es_diputada %}
+                    <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#nuevaCategoria">
+                        <i class="fas fa-plus me-1"></i>Nueva Categoría
+                    </button>
+                {% endif %}
             </div>
             <div class="card-body p-0">
                 <div class="list-group list-group-flush">
@@ -79,7 +81,7 @@
                                 <th>Nombre</th>
                                 <th>Usuario</th>
                                 <th>Email</th>
-                                <th>Categoría</th>
+                                <th>Categorías</th>
                                 <th class="text-end">Acciones</th>
                             </tr>
                         </thead>
@@ -95,13 +97,13 @@
                                 <td>{{ asesor.username }}</td>
                                 <td>{{ asesor.email }}</td>
                                 <td>
-                                    {% if asesor.perfil.categoria %}
-                                        <span class="badge" style="background-color: #965a0091; color: white;">
-                                            {{ asesor.perfil.categoria.nombre }}
+                                    {% for categoria in asesor.perfil.categorias.all %}
+                                        <span class="badge me-1" style="background-color: #965a0091; color: white;">
+                                            {{ categoria.nombre }}
                                         </span>
-                                    {% else %}
+                                    {% empty %}
                                         <span class="badge bg-secondary">Sin categoría</span>
-                                    {% endif %}
+                                    {% endfor %}
                                 </td>
                                 <td class="text-end">
                                     <button class="btn btn-sm btn-outline-primary btn-action" 
@@ -186,13 +188,23 @@
 
                     <!-- Categoría -->
                     <div class="mb-3">
-                        <label class="form-label">Categoría</label>
-                        <select name="categoria" class="form-select" required>
-                            <option value="">Seleccione una categoría</option>
+                        <label class="form-label">Categorías</label>
+                        <div class="categorias-container border rounded p-3">
                             {% for categoria in categorias %}
-                                <option value="{{ categoria.id }}">{{ categoria.nombre }}</option>
+                            <div class="form-check">
+                                <input type="checkbox" 
+                                       name="categorias" 
+                                       value="{{ categoria.id }}" 
+                                       class="form-check-input" 
+                                       id="cat_{{ categoria.id }}_new">
+                                <label class="form-check-label" for="cat_{{ categoria.id }}_new">
+                                    {{ categoria.nombre }}
+                                    <small class="text-muted d-block">{{ categoria.descripcion|truncatechars:50 }}</small>
+                                </label>
+                            </div>
                             {% endfor %}
-                        </select>
+                        </div>
+                        <div class="form-text">Seleccione las categorías a las que pertenecerá el asesor</div>
                     </div>
                 </div>
                 <div class="modal-footer">
@@ -234,15 +246,23 @@
                                name="email" value="{{ asesor.email }}" required>
                     </div>
                     <div class="mb-3">
-                        <label for="categoria{{ asesor.id }}" class="form-label">Categoría</label>
-                        <select class="form-control" id="categoria{{ asesor.id }}" name="categoria" required>
+                        <label class="form-label">Categorías</label>
+                        <div class="categorias-container border rounded p-3">
                             {% for categoria in categorias %}
-                                <option value="{{ categoria.id }}" 
-                                    {% if asesor.perfil.categoria_id == categoria.id %}selected{% endif %}>
+                            <div class="form-check">
+                                <input type="checkbox" 
+                                       name="categorias" 
+                                       value="{{ categoria.id }}" 
+                                       class="form-check-input" 
+                                       id="cat_{{ categoria.id }}_{{ asesor.id }}"
+                                       {% if categoria in asesor.perfil.categorias.all %}checked{% endif %}>
+                                <label class="form-check-label" for="cat_{{ categoria.id }}_{{ asesor.id }}">
                                     {{ categoria.nombre }}
-                                </option>
+                                    <small class="text-muted d-block">{{ categoria.descripcion|truncatechars:50 }}</small>
+                                </label>
+                            </div>
                             {% endfor %}
-                        </select>
+                        </div>
                     </div>
                 </div>
                 <div class="modal-footer">
@@ -280,7 +300,7 @@
 
 <!-- Modales para Categorías (solo para superuser) -->
 {% if is_superuser %}
-<!-- Modal Nueva Categoría -->
+<!-- Modal para crear categoría -->
 <div class="modal fade" id="nuevaCategoria" tabindex="-1">
     <div class="modal-dialog">
         <div class="modal-content">
@@ -291,19 +311,20 @@
             <form method="post" action="{% url 'usuario:crear_categoria' %}">
                 {% csrf_token %}
                 <div class="modal-body">
-                    {% for field in form_categoria %}
                     <div class="mb-3">
-                        <label for="{{ field.id_for_label }}" class="form-label">{{ field.label }}</label>
-                        {{ field }}
-                        {% if field.help_text %}
-                            <div class="form-text">{{ field.help_text }}</div>
-                        {% endif %}
+                        <label class="form-label">Nombre</label>
+                        {{ categoria_form.nombre }}
                     </div>
-                    {% endfor %}
+                    <div class="mb-3">
+                        <label class="form-label">Descripción</label>
+                        {{ categoria_form.descripcion }}
+                    </div>
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-                    <button type="submit" class="btn btn-primary">Guardar</button>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-save me-1"></i>Guardar
+                    </button>
                 </div>
             </form>
         </div>
@@ -549,6 +570,38 @@ document.addEventListener('DOMContentLoaded', function() {
     .btn-group-sm .btn {
         width: 100%;
     }
+}
+
+.categorias-container {
+    max-height: 200px;
+    overflow-y: auto;
+}
+
+.form-check {
+    padding: 10px;
+    border-bottom: 1px solid #eee;
+}
+
+.form-check:last-child {
+    border-bottom: none;
+}
+
+.form-check:hover {
+    background-color: #f8f9fa;
+}
+
+.form-check-label {
+    cursor: pointer;
+    width: 100%;
+}
+
+.form-check-input {
+    cursor: pointer;
+}
+
+.form-check small {
+    color: #6c757d;
+    font-size: 0.875em;
 }
 </style>
 {% endblock %}

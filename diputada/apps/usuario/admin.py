@@ -48,7 +48,7 @@ class CustomUserAdmin(UserAdmin):
     inlines = (PerfilInline,)
     add_form = CustomUserCreationForm
     list_display = ('username', 'email', 'first_name', 'last_name', 'get_tipo_usuario', 'get_categoria')
-    list_filter = ('perfil__es_diputada', 'perfil__categoria')
+    list_filter = ('perfil__es_diputada', 'perfil__categorias')
     
     add_fieldsets = (
         (None, {
@@ -64,9 +64,7 @@ class CustomUserAdmin(UserAdmin):
     get_tipo_usuario.short_description = 'Tipo de Usuario'
 
     def get_categoria(self, obj):
-        if hasattr(obj, 'perfil') and obj.perfil.categoria:
-            return obj.perfil.categoria.nombre
-        return '-'
+        return ', '.join([cat.nombre for cat in obj.perfil.categorias.all()]) or 'Sin categoría'
     get_categoria.short_description = 'Categoría'
 
     def get_queryset(self, request):

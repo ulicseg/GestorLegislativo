@@ -4,54 +4,68 @@
 
 {% block content %}
 <div class="row justify-content-center">
-    <div class="col-md-6">
-        <div class="card shadow-sm">
-            <div class="card-header bg-light">
-                <div class="d-flex align-items-center">
-                    <i class="fas fa-user-circle text-primary me-2" style="font-size: 1.5rem;"></i>
-                    <h5 class="mb-0">Mi Perfil</h5>
-                </div>
+    <div class="col-md-10">
+        <div class="card shadow-sm mb-4">
+            <div class="card-header bg-light d-flex justify-content-between align-items-center">
+                <h5 class="mb-0">
+                    <i class="fas fa-user me-2"></i>Mi Perfil
+                </h5>
+                <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#cambiarPasswordModal">
+                    <i class="fas fa-key me-2"></i>Cambiar Contraseña
+                </button>
             </div>
             <div class="card-body">
-                <div class="row g-2">
-                    <div class="col-6">
-                        <label class="form-label text-muted small mb-1">Nombre completo</label>
-                        <div class="fw-medium">{{ user.get_full_name }}</div>
+                <div class="row g-4">
+                    <!-- Ajustar las columnas para mejor distribución -->
+                    <div class="col-md-4">
+                        <div class="mb-4">
+                            <label class="text-muted small">Nombre completo</label>
+                            <h6 class="mb-0">{{ user.get_full_name }}</h6>
+                        </div>
+                        
+                        <div class="mb-4">
+                            <label class="text-muted small">Usuario</label>
+                            <h6 class="mb-0">{{ user.username }}</h6>
+                        </div>
                     </div>
-                    <div class="col-6">
-                        <label class="form-label text-muted small mb-1">Usuario</label>
-                        <div class="fw-medium">{{ user.username }}</div>
+                    
+                    <div class="col-md-4">
+                        <div class="mb-4">
+                            <label class="text-muted small">Email</label>
+                            <h6 class="mb-0" style="word-break: break-all;">{{ user.email }}</h6>
+                        </div>
+                        
+                        <div class="mb-4">
+                            <label class="text-muted small">Rol</label>
+                            <h6 class="mb-0">
+                                <span class="badge {% if user.perfil.es_diputada %}bg-primary{% else %}bg-info{% endif %}">
+                                    {% if user.perfil.es_diputada %}Diputada{% else %}Asesor{% endif %}
+                                </span>
+                            </h6>
+                        </div>
                     </div>
-                    <div class="col-12">
-                        <label class="form-label text-muted small mb-1">Email</label>
-                        <div class="fw-medium">{{ user.email }}</div>
-                    </div>
-                    <div class="col-12 d-flex justify-content-between align-items-center">
-                        <div>
-                            <label class="form-label text-muted small mb-1">Rol</label>
-                            <div class="badge bg-primary">
+                    
+                    <!-- Columna dedicada para las comisiones -->
+                    <div class="col-md-4">
+                        <div class="mb-4">
+                            <label class="text-muted small">Comisión</label>
+                            <div class="mt-2">
                                 {% if user.perfil.es_diputada %}
-                                    <i class="fas fa-user-tie me-1"></i>Diputada
+                                    <span class="badge bg-secondary">No aplica</span>
                                 {% else %}
-                                    <i class="fas fa-user me-1"></i>Asesor
+                                    <div class="d-flex flex-wrap gap-2">
+                                        {% for categoria in user.perfil.categorias.all %}
+                                            <span class="badge bg-info" style="white-space: normal; text-align: left;">
+                                                {{ categoria.nombre }}
+                                            </span>
+                                        {% empty %}
+                                            <span class="badge bg-warning">Sin comisión asignada</span>
+                                        {% endfor %}
+                                    </div>
                                 {% endif %}
                             </div>
                         </div>
-                        {% if not user.perfil.es_diputada %}
-                        <div class="text-end">
-                            <label class="form-label text-muted small mb-1">Comisión</label>
-                            <div class="badge bg-info text-wrap" style="width: auto; white-space: normal;">
-                                <i class="fas fa-tag me-1"></i>{{ user.perfil.categoria.nombre }}
-                            </div>
-                        </div>
-                        {% endif %}
                     </div>
-                </div>
-
-                <div class="mt-3 pt-3 border-top">
-                    <button class="btn btn-primary w-100" data-bs-toggle="modal" data-bs-target="#cambiarPassword">
-                        <i class="fas fa-key me-2"></i>Cambiar Contraseña
-                    </button>
                 </div>
             </div>
         </div>
@@ -59,7 +73,7 @@
 </div>
 
 <!-- Modal Cambiar Contraseña -->
-<div class="modal fade" id="cambiarPassword" tabindex="-1">
+<div class="modal fade" id="cambiarPasswordModal" tabindex="-1">
     <div class="modal-dialog">
         <div class="modal-content">
             <div class="modal-header">

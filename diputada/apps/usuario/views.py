@@ -5,8 +5,9 @@ from django.contrib import messages
 from django.contrib.auth.models import User
 from apps.proyectos.models import Categoria
 from .models import Perfil
-from .forms import AsesorCreationForm, CategoriaForm, UserCreationForm
+from .forms import AsesorCreationForm, DiputadaCreationForm, CategoriaForm
 from django.views.decorators.csrf import csrf_protect
+from django.db import transaction
 
 def es_diputada(user):
     return user.is_superuser or (hasattr(user, 'perfil') and user.perfil.es_diputada)
@@ -17,56 +18,54 @@ def es_superuser(user):
 @login_required
 @user_passes_test(es_diputada)
 def gestion_usuarios(request):
-    # Solo el superuser puede ver y gestionar categorías
-    categorias = Categoria.objects.all()  # Quitamos el condicional para que siempre estén disponibles
-    
-    # Filtrar usuarios según el rol y cargar las relaciones necesarias
+    categorias = Categoria.objects.all()
     asesores = User.objects.filter(
         perfil__es_diputada=False
-    ).select_related(
-        'perfil',
-        'perfil__categoria'
-    ).order_by('first_name')
+    ).select_related('perfil').prefetch_related('perfil__categorias')
     
     context = {
-        'categorias': categorias,
         'asesores': asesores,
+        'categorias': categorias,
+        'is_superuser': request.user.is_superuser,
         'form_asesor': AsesorCreationForm(),
-        'form_categoria': CategoriaForm() if request.user.is_superuser else None,
-        'is_superuser': request.user.is_superuser
+        'form_diputada': DiputadaCreationForm(),
+        'categoria_form': CategoriaForm(),
     }
     
     return render(request, 'usuario/gestion.html', context)
 
 @login_required
 @user_passes_test(es_diputada)
+@csrf_protect
 def crear_asesor(request):
     if request.method == 'POST':
         form = AsesorCreationForm(request.POST)
-        print("\nDatos del formulario:", request.POST)
-        
         if form.is_valid():
             try:
-                user = form.save(commit=False)
-                user.save()
-                
-                categoria = form.cleaned_data.get('categoria')
-                perfil = user.perfil
-                perfil.es_diputada = False
-                perfil.categoria = categoria
-                perfil.save()
+                with transaction.atomic():
+                    # 1. Crear y guardar el usuario
+                    user = form.save()
+                    
+                    # 2. Obtener o crear el perfil
+                    perfil, created = Perfil.objects.get_or_create(user=user)
+                    perfil.es_diputada = False
+                    perfil.save()
+                    
+                    # 3. Asignar categorías
+                    categorias = form.cleaned_data.get('categorias')
+                    if categorias:
+                        perfil.categorias.set(categorias)  # Usar set() en lugar de add()
                 
                 messages.success(request, f'Asesor {user.get_full_name()} creado exitosamente.')
+                
             except Exception as e:
                 messages.error(request, f'Error al crear el asesor: {str(e)}')
+            
+            return redirect('usuario:gestion')
         else:
-            # Mostrar todos los errores del formulario de manera más amigable
-            errores = []
             for field, errors in form.errors.items():
-                field_name = form.fields[field].label or field
                 for error in errors:
-                    errores.append(f'{field_name}: {error}')
-            messages.error(request, 'Por favor corrija los siguientes errores: ' + ' | '.join(errores))
+                    messages.error(request, f'Error en {field}: {error}')
     
     return redirect('usuario:gestion')
 
@@ -82,26 +81,16 @@ def editar_asesor(request, pk):
             asesor.email = request.POST.get('email')
             asesor.save()
             
-            # Actualizar categoría
-            categoria_id = request.POST.get('categoria')
-            print(f"Categoría ID recibida: {categoria_id}")  # Debug
-            
-            if categoria_id:
-                categoria = get_object_or_404(Categoria, pk=categoria_id)
-                print(f"Categoría encontrada: {categoria}")  # Debug
-                
-                # Actualizar el perfil
+            # Actualizar categorías
+            categorias_ids = request.POST.getlist('categorias')
+            if categorias_ids:
                 perfil = asesor.perfil
-                perfil.categoria = categoria
-                perfil.save()
-                
-                print(f"Perfil actualizado: {perfil.__dict__}")  # Debug
+                perfil.categorias.set(categorias_ids)
             
             messages.success(request, 'Asesor actualizado exitosamente.')
         except Exception as e:
-            print(f"Error al actualizar asesor: {str(e)}")  # Debug
             messages.error(request, f'Error al actualizar el asesor: {str(e)}')
-            
+    
     return redirect('usuario:gestion')
 
 @login_required
@@ -123,15 +112,16 @@ def eliminar_asesor(request, pk):
     return redirect('usuario:gestion')
 
 @login_required
-@user_passes_test(es_superuser)
+@user_passes_test(es_diputada)
 def crear_categoria(request):
     if request.method == 'POST':
         form = CategoriaForm(request.POST)
         if form.is_valid():
-            form.save()
-            messages.success(request, 'Categoría creada exitosamente.')
+            categoria = form.save()
+            messages.success(request, f'Categoría {categoria.nombre} creada exitosamente.')
         else:
             messages.error(request, 'Por favor corrija los errores en el formulario.')
+    
     return redirect('usuario:gestion')
 
 @login_required
@@ -225,29 +215,29 @@ def cambiar_password(request):
     return redirect('usuario:perfil')
 
 @login_required
-@user_passes_test(es_superuser)  # Solo el superuser puede crear diputadas
+@user_passes_test(es_superuser)
+@csrf_protect
 def crear_diputada(request):
     if request.method == 'POST':
-        form = UserCreationForm(request.POST)
+        form = DiputadaCreationForm(request.POST)
         if form.is_valid():
             try:
-                # Crear el usuario
-                user = form.save(commit=False)
-                user.first_name = request.POST.get('first_name')
-                user.last_name = request.POST.get('last_name')
-                user.email = request.POST.get('email')
-                user.save()
-                
-                # Asegurarnos que el perfil existente sea actualizado como diputada
-                perfil = user.perfil
-                perfil.es_diputada = True
-                perfil.categoria = None  # Las diputadas no tienen categoría
-                perfil.save()
+                with transaction.atomic():
+                    # 1. Crear y guardar el usuario
+                    user = form.save()
+                    
+                    # 2. Actualizar el perfil existente (creado por la señal)
+                    perfil = user.perfil
+                    perfil.es_diputada = True
+                    perfil.save()
                 
                 messages.success(request, f'Diputada {user.get_full_name()} creada exitosamente.')
             except Exception as e:
                 messages.error(request, f'Error al crear la diputada: {str(e)}')
+            return redirect('usuario:gestion')
         else:
-            messages.error(request, 'Por favor corrija los errores en el formulario.')
+            for field, errors in form.errors.items():
+                for error in errors:
+                    messages.error(request, f'Error en {field}: {error}')
     
     return redirect('usuario:gestion')

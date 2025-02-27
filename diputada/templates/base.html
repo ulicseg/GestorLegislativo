@@ -25,6 +25,9 @@
         body {
             background-color: #f2f6fc;
             color: var(--dark-gray);
+            padding-bottom: 60px; /* Espacio para el footer */
+            min-height: 100vh;
+            position: relative;
         }
 
         .navbar {
@@ -183,8 +186,12 @@
         }
 
         .navbar .badge {
-            font-size: 0.8rem;
-            padding: 0.4em 0.8em;
+            font-size: 0.75rem;
+            padding: 0.2rem 0.5rem !important;
+            max-width: 120px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
         }
         
         .navbar .nav-link {
@@ -362,6 +369,49 @@
                 margin-bottom: 0.5rem;
             }
         }
+
+        .btn-custom-primary {
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+        }
+        
+        .btn-custom-primary:hover {
+            background-color: var(--accent-color);
+            color: white;
+        }
+
+        .btn-custom-warning {
+            background-color: #b36b0191;
+            color: white;
+            border: 1px solid #965a0091;
+        }
+
+        .btn-custom-warning:hover {
+            background-color: #965a0091;
+            color: white;
+        }
+
+        .btn-custom-danger {
+            background-color: var(--danger-color);
+            color: white;
+            border: none;
+        }
+
+        .btn-custom-danger:hover {
+            background-color: #6b1515;
+            color: white;
+        }
+
+        .btn-petroleo {
+            background-color: #004d40;
+            color: white;
+            border: none;
+        }
+        .btn-petroleo:hover {
+            background-color: #00695c;
+            color: white;
+        }
     </style>
     {% block extra_css %}{% endblock %}
 </head>
@@ -381,6 +431,18 @@
                         <li class="nav-item">
                             <a class="nav-link" href="{% url 'proyectos:lista_proyectos' %}">
                                 <i class="fas fa-folder me-1"></i>Proyectos
+                            </a>
+                        </li>
+                        {% if user.perfil.es_diputada %}
+                            <li class="nav-item">
+                                <a class="nav-link" href="{% url 'proyectos:mis_proyectos' %}">
+                                    <i class="fas fa-file-signature me-1"></i>Mis Proyectos
+                                </a>
+                            </li>
+                        {% endif %}
+                        <li class="nav-item">
+                            <a class="nav-link" href="{% url 'proyectos:listar_temarios' %}">
+                                <i class="fas fa-list-alt me-1"></i>Temarios
                             </a>
                         </li>
                         {% if user.is_superuser or user.perfil.es_diputada %}
@@ -405,9 +467,12 @@
                                     <span class="badge bg-primary me-2">
                                         <i class="fas fa-user me-1"></i>Asesor
                                     </span>
-                                    <span class="badge bg-info">
-                                        <i class="fas fa-tag me-1"></i>{{ user.perfil.categoria.nombre|truncatechars:25 }}
-                                    </span>
+                                    {% for categoria in user.perfil.categorias.all %}
+                                        <span class="badge bg-info me-2 small">
+                                            <i class="fas fa-tag me-1"></i>
+                                            {{ categoria.nombre|truncatechars:15 }}
+                                        </span>
+                                    {% endfor %}
                                 {% endif %}
                             </span>
                         </li>
@@ -459,6 +524,14 @@
         {% block content %}
         {% endblock %}
     </div>
+
+    <!-- Footer sutil -->
+    <footer class="position-fixed bottom-0 start-50 translate-x-50 py-2 text-center" 
+            style="background: rgba(255,255,255,0.9); transform: translateX(-50%); width: 100%; z-index: 1000;">
+        <small class="text-muted" style="font-size: 0.8rem;">
+            © 2025 · Desarrollado por Ulises Gutierrez · <a href="https://wa.me/+543725471779" class="text-decoration-none text-muted" target="_blank" rel="noopener noreferrer">3725-471779</a>
+        </small>
+    </footer>
 
     <!-- Bootstrap JS -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>

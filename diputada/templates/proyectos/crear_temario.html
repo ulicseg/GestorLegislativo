@@ -1,0 +1,194 @@
+{% extends 'base.html' %}
+
+{% block title %}{% if temario %}Editar{% else %}Crear{% endif %} Temario{% endblock %}
+
+{% block content %}
+<div class="card shadow-sm">
+    <div class="card-header">
+        <h4 class="mb-0">
+            <i class="fas fa-list-alt me-2"></i>
+            {% if temario %}Editar{% else %}Crear{% endif %} Temario
+        </h4>
+    </div>
+    <div class="card-body">
+        <form method="post" id="temarioForm">
+            {% csrf_token %}
+            
+            <div class="row mb-3">
+                <div class="col-md-6">
+                    <label class="form-label">Número de Temario</label>
+                    {{ form.numero }}
+                    {% if form.numero.errors %}
+                        <div class="invalid-feedback d-block">
+                            {{ form.numero.errors }}
+                        </div>
+                    {% endif %}
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label">Comisión</label>
+                    {{ form.comision }}
+                    {% if form.comision.errors %}
+                        <div class="invalid-feedback d-block">
+                            {{ form.comision.errors }}
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <div class="mb-4">
+                <label class="form-label">Proyectos</label>
+                <div class="card">
+                    <div class="card-body">
+                        <div id="proyectosSeleccionados" class="mb-3">
+                            <!-- Aquí se mostrarán los proyectos seleccionados -->
+                        </div>
+                        
+                        <button type="button" class="btn btn-outline-primary" 
+                                data-bs-toggle="modal" data-bs-target="#modalProyectos">
+                            <i class="fas fa-plus me-1"></i>Agregar Proyecto
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="d-flex justify-content-between">
+                <a href="{% url 'proyectos:listar_temarios' %}" class="btn btn-secondary">
+                    <i class="fas fa-arrow-left me-1"></i>Volver
+                </a>
+                <button type="submit" class="btn btn-primary">
+                    <i class="fas fa-save me-1"></i>Guardar Temario
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Modal para seleccionar proyectos -->
+<div class="modal fade" id="modalProyectos" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Seleccionar Proyectos</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <input type="text" class="form-control mb-3" id="buscarProyecto" 
+                       placeholder="Buscar proyecto...">
+                
+                <div class="list-group" id="listaProyectos">
+                    {% for proyecto in proyectos_disponibles %}
+                        <div class="list-group-item list-group-item-action">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <h6 class="mb-1">{{ proyecto.titulo }}</h6>
+                                    <small class="text-muted">
+                                        {{ proyecto.categoria.nombre }} - 
+                                        {{ proyecto.creado_por.get_full_name }}
+                                    </small>
+                                </div>
+                                <button type="button" class="btn btn-sm btn-outline-primary"
+                                        onclick="agregarProyecto({{ proyecto.id }}, '{{ proyecto.titulo }}')">
+                                    <i class="fas fa-plus"></i>
+                                </button>
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% block extra_js %}
+<script>
+let proyectosSeleccionados = new Map();
+
+function actualizarListaProyectos() {
+    const container = document.getElementById('proyectosSeleccionados');
+    container.innerHTML = '';
+    
+    if (proyectosSeleccionados.size === 0) {
+        container.innerHTML = '<div class="text-muted">No hay proyectos seleccionados</div>';
+        return;
+    }
+    
+    const lista = document.createElement('div');
+    lista.className = 'list-group';
+    
+    Array.from(proyectosSeleccionados.entries())
+         .sort((a, b) => a[1].orden - b[1].orden)
+         .forEach(([id, datos]) => {
+             const item = document.createElement('div');
+             item.className = 'list-group-item d-flex justify-content-between align-items-center';
+             item.innerHTML = `
+                 <div class="d-flex align-items-center">
+                     <input type="number" class="form-control form-control-sm me-2" 
+                            style="width: 70px" value="${datos.orden}"
+                            onchange="cambiarOrden(${id}, this.value)">
+                     <span>${datos.titulo}</span>
+                 </div>
+                 <button type="button" class="btn btn-sm btn-outline-danger"
+                         onclick="eliminarProyecto(${id})">
+                     <i class="fas fa-times"></i>
+                 </button>
+             `;
+             lista.appendChild(item);
+         });
+    
+    container.appendChild(lista);
+}
+
+function agregarProyecto(id, titulo) {
+    if (!proyectosSeleccionados.has(id)) {
+        const orden = proyectosSeleccionados.size + 1;
+        proyectosSeleccionados.set(id, { titulo, orden });
+        actualizarListaProyectos();
+    }
+}
+
+function eliminarProyecto(id) {
+    proyectosSeleccionados.delete(id);
+    actualizarListaProyectos();
+}
+
+function cambiarOrden(id, nuevoOrden) {
+    const proyecto = proyectosSeleccionados.get(id);
+    if (proyecto) {
+        proyecto.orden = parseInt(nuevoOrden);
+        actualizarListaProyectos();
+    }
+}
+
+document.getElementById('temarioForm').addEventListener('submit', function(e) {
+    const proyectosInput = document.createElement('input');
+    proyectosInput.type = 'hidden';
+    proyectosInput.name = 'proyectos';
+    proyectosInput.value = JSON.stringify(Array.from(proyectosSeleccionados.entries()));
+    this.appendChild(proyectosInput);
+});
+
+// Búsqueda de proyectos
+document.getElementById('buscarProyecto').addEventListener('input', function(e) {
+    const busqueda = e.target.value.toLowerCase();
+    const items = document.querySelectorAll('#listaProyectos .list-group-item');
+    
+    items.forEach(item => {
+        const titulo = item.querySelector('h6').textContent.toLowerCase();
+        const visible = titulo.includes(busqueda);
+        item.style.display = visible ? '' : 'none';
+    });
+});
+
+{% if temario %}
+// Cargar proyectos existentes si estamos editando
+{% for pt in temario.proyectotemario_set.all %}
+    proyectosSeleccionados.set({{ pt.proyecto.id }}, {
+        titulo: '{{ pt.proyecto.titulo|escapejs }}',
+        orden: {{ pt.orden }}
+    });
+{% endfor %}
+actualizarListaProyectos();
+{% endif %}
+</script>
+{% endblock %}
+{% endblock %} 

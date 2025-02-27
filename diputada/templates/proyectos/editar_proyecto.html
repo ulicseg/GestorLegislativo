@@ -8,10 +8,31 @@
         <h4 class="mb-0">Editar Proyecto</h4>
     </div>
     <div class="card-body">
-        <form method="post">
+        <form method="post" id="editForm">
             {% csrf_token %}
+            <div class="form-group mb-3">
+                <label for="{{ form.categoria.id_for_label }}">Comisión</label>
+                <select name="{{ form.categoria.name }}" id="{{ form.categoria.id_for_label }}" class="form-control">
+                    {% for categoria in todas_categorias %}
+                        <option value="{{ categoria.id }}" {% if categoria == proyecto.categoria %}selected{% endif %}>
+                            {{ categoria.nombre }}
+                        </option>
+                    {% endfor %}
+                </select>
+                {% if form.categoria.errors %}
+                    <div class="invalid-feedback d-block">
+                        {{ form.categoria.errors }}
+                    </div>
+                {% endif %}
+                {% if not user.perfil.es_diputada %}
+                    <div class="form-text text-warning">
+                        <i class="fas fa-exclamation-triangle me-1"></i>
+                        Si cambias la categoría, ya no podrás ver este proyecto en tu lista.
+                    </div>
+                {% endif %}
+            </div>
             <div class="mb-3">
-                <label for="{{ form.titulo.id_for_label }}" class="form-label">Título</label>
+                <label class="form-label">Título</label>
                 {{ form.titulo }}
                 {% if form.titulo.errors %}
                     <div class="invalid-feedback d-block">
@@ -20,7 +41,7 @@
                 {% endif %}
             </div>
             <div class="mb-3">
-                <label for="{{ form.descripcion.id_for_label }}" class="form-label">Descripción</label>
+                <label class="form-label">Descripción</label>
                 {{ form.descripcion }}
                 {% if form.descripcion.errors %}
                     <div class="invalid-feedback d-block">
@@ -30,13 +51,59 @@
             </div>
             <div class="d-flex justify-content-between">
                 <a href="{% url 'proyectos:detalle_proyecto' proyecto.pk %}" class="btn btn-secondary">
-                    <i class="fas fa-arrow-left"></i> Volver
+                    <i class="fas fa-arrow-left me-1"></i>Volver
                 </a>
                 <button type="submit" class="btn btn-primary">
-                    <i class="fas fa-save"></i> Guardar Cambios
+                    <i class="fas fa-save me-1"></i>Guardar Cambios
                 </button>
             </div>
         </form>
     </div>
 </div>
+
+<!-- Modal de confirmación para cambio de categoría -->
+<div class="modal fade" id="confirmaCambioCategoria" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Confirmar cambio de categoría</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p>¿Estás seguro que deseas cambiar la comisión del proyecto?</p>
+                <p class="text-warning">
+                    <i class="fas fa-exclamation-triangle me-1"></i>
+                    Si no eres diputada, ya no podrás ver este proyecto en tu lista.
+                </p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <button type="button" class="btn btn-primary" id="confirmarCambio">Confirmar</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const form = document.getElementById('editForm');
+    const categoriaSelect = form.querySelector('[name="categoria"]');
+    const originalCategoria = '{{ proyecto.categoria.id }}';
+    const isDiputada = {{ user.perfil.es_diputada|yesno:"true,false" }};
+    
+    form.addEventListener('submit', function(e) {
+        if (!isDiputada && categoriaSelect.value !== originalCategoria) {
+            e.preventDefault();
+            const modal = new bootstrap.Modal(document.getElementById('confirmaCambioCategoria'));
+            modal.show();
+        }
+    });
+
+    document.getElementById('confirmarCambio').addEventListener('click', function() {
+        form.submit();
+    });
+});
+</script>
+{% endblock %}
 {% endblock %}

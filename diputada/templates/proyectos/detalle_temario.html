@@ -1,0 +1,135 @@
+{% extends 'base.html' %}
+
+{% block title %}Temario #{{ temario.numero }}{% endblock %}
+
+{% block content %}
+<div class="card shadow-sm">
+    <div class="card-header" style="background-color: #dddddd;">
+        <div class="d-flex justify-content-between align-items-center">
+            <div class="d-flex align-items-center">
+                <h4 class="mb-0">
+                    <strong style="color: #153664;">Temario #{{ temario.numero }}</strong>
+                </h4>
+                <span class="badge ms-2" style="background-color: #965a0091 !important; font-size: 0.75rem;">
+                    {{ temario.comision.nombre }}
+                </span>
+            </div>
+            <div class="btn-group">
+                <a href="{% url 'proyectos:editar_temario' temario.pk %}" 
+                   class="btn btn-custom-warning btn-sm">
+                    <i class="fas fa-edit me-1"></i>Editar
+                </a>
+                <a href="{% url 'proyectos:descargar_temario_pdf' temario.pk %}" 
+                   class="btn btn-petroleo btn-sm">
+                    <i class="fas fa-file-pdf me-1"></i>Descargar PDF
+                </a>
+                {% if user.perfil.es_diputada %}
+                    <button class="btn btn-custom-danger btn-sm" 
+                            data-bs-toggle="modal" 
+                            data-bs-target="#eliminarTemario">
+                        <i class="fas fa-trash me-1"></i>Eliminar
+                    </button>
+                {% endif %}
+                <a href="{% url 'proyectos:listar_temarios' %}" 
+                   class="btn btn-custom-primary btn-sm">
+                    <i class="fas fa-arrow-left me-1"></i>Volver
+                </a>
+            </div>
+        </div>
+    </div>
+    
+    <div class="card-body" style="background-color: #e2e2e2;">
+        <div class="d-flex align-items-center text-muted mb-4">
+            <div class="me-3">
+                <i class="fas fa-calendar me-1"></i>
+                Creado el {{ temario.fecha_creacion|date:"d/m/Y" }}
+            </div>
+            <div>
+                <i class="fas fa-user me-1"></i>
+                Creado por {{ temario.creado_por.get_full_name }}
+            </div>
+        </div>
+        
+        <h5 class="mb-3">
+            <i class="fas fa-file-alt me-2"></i>Proyectos incluidos:
+        </h5>
+        {% for pt in proyectos_temario %}
+            <div class="card mb-3 shadow-sm" style="background-color: white;">
+                <div class="card-header" style="background-color: #d1d1d1;">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h6 class="mb-0 d-flex align-items-center">
+                            <span class="badge bg-primary me-2">{{ pt.orden }}</span>
+                            <a href="{% url 'proyectos:detalle_proyecto' pt.proyecto.pk %}" 
+                               class="text-primary text-decoration-none">
+                                {{ pt.proyecto.titulo }}
+                            </a>
+                        </h6>
+                        <span class="badge" style="background-color: #153664;">
+                            {{ pt.proyecto.categoria.nombre }}
+                        </span>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div class="mb-3">
+                        <div class="border-start border-primary border-3 ps-3 mb-3" style="background-color: #e8e8e8;">
+                            {{ pt.proyecto.descripcion|safe|truncatewords_html:50 }}
+                        </div>
+                    </div>
+                    
+                    <div class="actualizaciones-section" style="background-color: #d4d4d4; border-radius: 8px; padding: 1rem;">
+                        <h6 class="mb-3">
+                            <i class="fas fa-history me-2"></i>Últimas actualizaciones:
+                        </h6>
+                        {% for actualizacion in pt.proyecto.actualizaciones.all|slice:":3" %}
+                            <div class="border-start border-secondary ps-3 mb-2" 
+                                 style="background-color: white; padding: 0.8rem; border-radius: 0 8px 8px 0; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">
+                                <div class="small text-muted">
+                                    <i class="fas fa-user-edit me-1"></i>
+                                    {{ actualizacion.autor.get_full_name }} - 
+                                    {{ actualizacion.fecha|date:"d/m/Y H:i" }}
+                                </div>
+                                <div>{{ actualizacion.contenido|safe }}</div>
+                            </div>
+                        {% empty %}
+                            <div class="text-muted small">
+                                <i class="fas fa-info-circle me-1"></i>
+                                No hay actualizaciones registradas
+                            </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        {% empty %}
+            <div class="alert alert-info">
+                <i class="fas fa-info-circle me-2"></i>
+                No hay proyectos asignados a este temario
+            </div>
+        {% endfor %}
+    </div>
+</div>
+
+<!-- Modal para confirmar eliminación -->
+<div class="modal fade" id="eliminarTemario" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Confirmar Eliminación</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p>¿Estás seguro que deseas eliminar este temario?</p>
+                <p class="text-danger mb-0">Esta acción no se puede deshacer.</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <form method="post" action="{% url 'proyectos:eliminar_temario' temario.pk %}">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-danger">
+                        <i class="fas fa-trash me-1"></i>Eliminar
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} 

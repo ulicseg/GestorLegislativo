@@ -1,0 +1,132 @@
+{% extends 'base.html' %}
+
+{% block title %}Temarios{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h4 class="mb-0">
+        <i class="fas fa-list-alt me-2"></i>Temarios
+    </h4>
+    <a href="{% url 'proyectos:crear_temario' %}" class="btn btn-custom-primary">
+        <i class="fas fa-plus me-2"></i>Nuevo Temario
+    </a>
+</div>
+
+<!-- Filtros -->
+<div class="card shadow-sm mb-4">
+    <div class="card-body">
+        <form method="get" class="row g-3">
+            <div class="col-md-5">
+                <div class="input-group">
+                    <span class="input-group-text bg-light">
+                        <i class="fas fa-hashtag text-muted"></i>
+                    </span>
+                    {{ filter_form.numero }}
+                </div>
+            </div>
+            <div class="col-md-5">
+                <div class="input-group">
+                    <span class="input-group-text bg-light">
+                        <i class="fas fa-tag text-muted"></i>
+                    </span>
+                    {{ filter_form.categoria }}
+                </div>
+            </div>
+            <div class="col-md-2">
+                <button type="submit" class="btn btn-primary w-100">
+                    Filtrar
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div class="row">
+    {% for temario in temarios %}
+        <div class="col-md-6 mb-4">
+            <div class="card shadow-sm">
+                <div class="card-header bg-light">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h5 class="mb-0">Temario #{{ temario.numero }}</h5>
+                        <span class="badge" style="background-color: #965a0091 !important;">
+                            {{ temario.comision.nombre|truncatechars:40 }}
+                        </span>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div class="small text-muted mb-3">
+                        <i class="fas fa-calendar me-1"></i>
+                        Creado el {{ temario.fecha_creacion|date:"d/m/Y" }}
+                    </div>
+                    
+                    <h6 class="mb-3">Proyectos incluidos:</h6>
+                    <ul class="list-group list-group-flush">
+                        {% for proyecto_temario in temario.proyectotemario_set.all %}
+                            <li class="list-group-item d-flex justify-content-between align-items-center">
+                                {{ proyecto_temario.proyecto.titulo }}
+                                <span class="badge bg-secondary">{{ proyecto_temario.orden }}</span>
+                            </li>
+                        {% empty %}
+                            <li class="list-group-item text-muted">
+                                <i class="fas fa-info-circle me-1"></i>
+                                No hay proyectos asignados
+                            </li>
+                        {% endfor %}
+                    </ul>
+                </div>
+                <div class="card-footer bg-light">
+                    <div class="btn-group w-100">
+                        <a href="{% url 'proyectos:detalle_temario' temario.pk %}" 
+                           class="btn btn-custom-primary btn-sm">
+                            <i class="fas fa-eye me-1"></i>Ver detalles
+                        </a>
+                        <a href="{% url 'proyectos:editar_temario' temario.pk %}" 
+                           class="btn btn-custom-warning btn-sm">
+                            <i class="fas fa-edit me-1"></i>Editar
+                        </a>
+                        {% if user.perfil.es_diputada %}
+                            <button class="btn btn-custom-danger btn-sm" 
+                                    data-bs-toggle="modal" 
+                                    data-bs-target="#eliminarTemario{{ temario.pk }}">
+                                <i class="fas fa-trash me-1"></i>Eliminar
+                            </button>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Modal para confirmar eliminación -->
+        <div class="modal fade" id="eliminarTemario{{ temario.pk }}" tabindex="-1">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title">Confirmar Eliminación</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body">
+                        <p>¿Estás seguro que deseas eliminar el temario #{{ temario.numero }}?</p>
+                        <p class="text-danger mb-0">Esta acción no se puede deshacer.</p>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                        <form method="post" action="{% url 'proyectos:eliminar_temario' temario.pk %}">
+                            {% csrf_token %}
+                            <button type="submit" class="btn btn-danger">
+                                <i class="fas fa-trash me-1"></i>Eliminar
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    {% empty %}
+        <div class="col-12">
+            <div class="alert alert-info text-center">
+                <i class="fas fa-info-circle me-2"></i>
+                No hay temarios registrados
+            </div>
+        </div>
+    {% endfor %}
+</div>
+{% endblock %} 

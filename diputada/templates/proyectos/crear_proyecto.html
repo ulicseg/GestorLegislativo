@@ -1,42 +1,52 @@
 {% extends 'base.html' %}
 
-{% block title %}Crear Nuevo Proyecto{% endblock %}
+{% block title %}Crear Proyecto{% endblock %}
 
 {% block content %}
-<div class="card">
-    <div class="card-header">
-        <h4 class="mb-0">Crear Nuevo Proyecto</h4>
-    </div>
-    <div class="card-body">
-        <form method="post">
-            {% csrf_token %}
-            <div class="mb-3">
-                <label for="{{ form.titulo.id_for_label }}" class="form-label">Título</label>
-                {{ form.titulo }}
-                {% if form.titulo.errors %}
-                    <div class="invalid-feedback d-block">
-                        {{ form.titulo.errors }}
+<div class="row justify-content-center">
+    <div class="col-md-8">
+        <div class="card shadow-sm">
+            <div class="card-header">
+                <h4 class="mb-0">
+                    <i class="fas fa-plus-circle me-2"></i>Crear Nuevo Proyecto
+                </h4>
+            </div>
+            <div class="card-body">
+                <form method="post">
+                    {% csrf_token %}
+                    <div class="mb-3">
+                        <label for="{{ form.titulo.id_for_label }}" class="form-label">Título</label>
+                        {{ form.titulo }}
+                        {% if form.titulo.errors %}
+                            <div class="invalid-feedback d-block">
+                                {{ form.titulo.errors }}
+                            </div>
+                        {% endif %}
                     </div>
-                {% endif %}
-            </div>
-            <div class="mb-3">
-                <label for="{{ form.descripcion.id_for_label }}" class="form-label">Descripción</label>
-                {{ form.descripcion }}
-                {% if form.descripcion.errors %}
-                    <div class="invalid-feedback d-block">
-                        {{ form.descripcion.errors }}
+                    <div class="mb-3">
+                        <label for="{{ form.categoria.id_for_label }}" class="form-label">Comisión</label>
+                        {{ form.categoria }}
                     </div>
-                {% endif %}
+                    <div class="mb-3">
+                        <label for="{{ form.descripcion.id_for_label }}" class="form-label">Descripción</label>
+                        {{ form.descripcion }}
+                        {% if form.descripcion.errors %}
+                            <div class="invalid-feedback d-block">
+                                {{ form.descripcion.errors }}
+                            </div>
+                        {% endif %}
+                    </div>
+                    <div class="text-end">
+                        <a href="{% url 'proyectos:lista_proyectos' %}" class="btn btn-secondary me-2">
+                            <i class="fas fa-times me-1"></i>Cancelar
+                        </a>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-save me-1"></i>Guardar Proyecto
+                        </button>
+                    </div>
+                </form>
             </div>
-            <div class="d-flex justify-content-between">
-                <a href="{% url 'proyectos:lista_proyectos' %}" class="btn btn-secondary">
-                    <i class="fas fa-arrow-left"></i> Volver
-                </a>
-                <button type="submit" class="btn btn-primary">
-                    <i class="fas fa-save"></i> Guardar Proyecto
-                </button>
-            </div>
-        </form>
+        </div>
     </div>
 </div>
 {% endblock %}

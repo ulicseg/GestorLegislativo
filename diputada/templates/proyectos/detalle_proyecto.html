@@ -17,19 +17,24 @@
                         <i class="fas fa-calendar me-1"></i>{{ proyecto.fecha_creacion|date:"d/m/Y" }}
                     </span>
                     <span class="badge bg-info" style="background-color: #965a0091 !important;">
-                        <i class="fas fa-tag me-1"></i>{{ proyecto.categoria.nombre }}
+                        <i class="fas fa-tag me-1"></i>{{ proyecto.categoria.nombre|truncatechars:40 }}
                     </span>
                 </div>
             </div>
             <div class="d-flex gap-2">
-                {% if user == proyecto.creado_por %}
-                    <button class="btn btn-danger btn-sm" 
+                {% if user.perfil.es_diputada or user == proyecto.creado_por %}
+                    <a href="{% url 'proyectos:editar_proyecto' proyecto.pk %}" class="btn btn-custom-warning btn-sm">
+                        <i class="fas fa-edit me-1"></i>Editar Proyecto
+                    </a>
+                {% endif %}
+                {% if user == proyecto.creado_por or user.perfil.categoria == proyecto.categoria %}
+                    <button class="btn btn-custom-danger btn-sm" 
                             data-bs-toggle="modal" 
                             data-bs-target="#eliminarProyecto">
                         <i class="fas fa-trash-alt me-1"></i>Eliminar Proyecto
                     </button>
                 {% endif %}
-                <a href="{% url 'proyectos:lista_proyectos' %}" class="btn btn-primary btn-sm">
+                <a href="{% url 'proyectos:lista_proyectos' %}" class="btn btn-custom-primary btn-sm">
                     <i class="fas fa-arrow-left me-1"></i>Volver
                 </a>
             </div>
@@ -44,69 +49,77 @@
         </div>
     </div>
 
-    <!-- Timeline de actualizaciones -->
-    <div class="card-body">
-        <h5 class="mb-4">
-            <i class="fas fa-history me-2"></i>Historial de Actualizaciones
-        </h5>
-
-        {% if not user.perfil.es_diputada and user.perfil.categoria == proyecto.categoria %}
-            <div class="card mb-4 border-primary">
-                <div class="card-header bg-primary text-white">
-                    <i class="fas fa-plus-circle me-2"></i>Nueva Actualización
-                </div>
-                <div class="card-body">
-                    <form method="post" action="{% url 'proyectos:crear_actualizacion' proyecto.pk %}">
-                        {% csrf_token %}
-                        <div class="mb-3">
-                            {{ form_actualizacion.media }}
-                            {{ form_actualizacion.contenido }}
-                            {% if form_actualizacion.contenido.errors %}
-                                <div class="invalid-feedback d-block">
-                                    {{ form_actualizacion.contenido.errors }}
-                                </div>
-                            {% endif %}
-                        </div>
-                        <button type="submit" class="btn btn-primary">
-                            <i class="fas fa-save me-2"></i>Guardar Actualización
-                        </button>
-                    </form>
+    <!-- Sección de Actualizaciones -->
+    <div class="card shadow-sm mt-4">
+        <div class="card-header">
+            <h5 class="mb-0">
+                <i class="fas fa-history me-2"></i>Actualizaciones
+            </h5>
+        </div>
+        <div class="card-body">
+            <button class="btn btn-custom-primary mb-4" 
+                    type="button" 
+                    data-bs-toggle="collapse" 
+                    data-bs-target="#nuevaActualizacion" 
+                    aria-expanded="false" 
+                    aria-controls="nuevaActualizacion">
+                <i class="fas fa-plus-circle me-1"></i>
+                Nueva Actualización
+            </button>
+            
+            <!-- Formulario desplegable -->
+            <div class="collapse mb-4" id="nuevaActualizacion">
+                <div class="card">
+                    <div class="card-body">
+                        <form method="post" action="{% url 'proyectos:crear_actualizacion' proyecto.pk %}">
+                            {% csrf_token %}
+                            <div class="mb-3">
+                                {{ form.media }}
+                                {{ form.contenido }}
+                            </div>
+                            <div class="d-flex justify-content-end">
+                                <button type="button" 
+                                        class="btn btn-secondary me-2" 
+                                        data-bs-toggle="collapse" 
+                                        data-bs-target="#nuevaActualizacion">
+                                    Cancelar
+                                </button>
+                                <button type="submit" class="btn btn-custom-primary">
+                                    Guardar Actualización
+                                </button>
+                            </div>
+                        </form>
+                    </div>
                 </div>
             </div>
-        {% endif %}
-
-        <div class="timeline">
+            
             {% for actualizacion in actualizaciones %}
-                <div class="timeline-item">
-                    <div class="timeline-marker"></div>
-                    <div class="timeline-content">
-                        <div class="card mb-3">
-                            <div class="card-header bg-light py-2">
-                                <div class="d-flex justify-content-between align-items-center">
-                                    <small class="text-muted">
-                                        <span class="fw-medium">{{ actualizacion.autor.get_full_name }}</span>
-                                        - {{ actualizacion.fecha|date:"d/m/Y H:i" }}
-                                    </small>
-                                    {% if user == actualizacion.autor or user.perfil.es_diputada %}
-                                        <button class="btn btn-sm btn-outline-danger" 
-                                                data-bs-toggle="modal" 
-                                                data-bs-target="#eliminarActualizacion{{ actualizacion.id }}">
-                                            <i class="fas fa-trash-alt"></i>
-                                        </button>
-                                    {% endif %}
-                                </div>
-                            </div>
-                            <div class="card-body py-2">
-                                {{ actualizacion.contenido|safe }}
-                            </div>
+                <div class="actualizacion-item mb-3 p-3 border-bottom">
+                    <div class="d-flex justify-content-between align-items-start">
+                        <div>
+                            <strong>{{ actualizacion.autor.get_full_name }}</strong>
+                            <small class="text-muted ms-2">
+                                {{ actualizacion.fecha|date:"d/m/Y H:i" }}
+                            </small>
                         </div>
+                        {% if user.perfil.es_diputada or actualizacion.autor == user %}
+                            <div class="btn-group">
+                                <form method="post" action="{% url 'proyectos:eliminar_actualizacion' actualizacion.pk %}"
+                                      class="d-inline">
+                                    {% csrf_token %}
+                                    <button type="submit" class="btn btn-sm btn-outline-danger">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                </form>
+                            </div>
+                        {% endif %}
+                    </div>
+                    <div class="mt-2">
+                        {{ actualizacion.contenido|safe }}
                     </div>
                 </div>
             {% empty %}
-                <div class="text-center text-muted my-4">
-                    <i class="fas fa-info-circle me-1"></i>
-                    No hay actualizaciones registradas
-                </div>
+                <p class="text-muted text-center">No hay actualizaciones aún.</p>
             {% endfor %}
         </div>
     </div>
@@ -160,7 +173,7 @@
 </style>
 
 <!-- Modales de eliminación (sin cambios) -->
-{% if user == proyecto.creado_por %}
+{% if user == proyecto.creado_por or user.perfil.categoria == proyecto.categoria %}
 <div class="modal fade" id="eliminarProyecto" tabindex="-1">
     <div class="modal-dialog">
         <div class="modal-content">
@@ -170,6 +183,12 @@
             </div>
             <div class="modal-body">
                 <p class="mb-0">¿Estás seguro que deseas eliminar este proyecto? Esta acción no se puede deshacer.</p>
+                {% if user.perfil.categoria == proyecto.categoria and user != proyecto.creado_por %}
+                <p class="text-warning mt-2">
+                    <i class="fas fa-exclamation-triangle me-1"></i>
+                    Estás eliminando un proyecto de tu comisión creado por otro asesor.
+                </p>
+                {% endif %}
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
