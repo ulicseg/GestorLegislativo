@@ -63,7 +63,7 @@
                             <i class="fas fa-calendar me-1"></i>{{ proyecto.fecha_creacion|date:"d/m/Y H:i" }}
                         </div>
                         <div class="btn-group">
-                            <a href="{% url 'proyectos:detalle_proyecto' proyecto.pk %}" class="btn btn-primary btn-sm">
+                            <a href="{% url 'proyectos:detalle_proyecto' proyecto.pk %}?from=mis_proyectos" class="btn btn-primary btn-sm">
                                 <i class="fas fa-eye me-1"></i>Ver detalles
                             </a>
                             <a href="{% url 'proyectos:editar_proyecto' proyecto.pk %}" class="btn btn-warning btn-sm" style="background-color: #b36b0191; border-color: #000000;">

@@ -57,6 +57,11 @@
                                     <h5 class="mb-2">Gestión de Proyectos</h5>
                                     <p class="text-muted">Administre los proyectos de sus comisiones</p>
                                 </div>
+                                <div class="feature-item">
+                                    <i class="fas fa-file-signature fa-2x text-primary mb-3"></i>
+                                    <h5 class="mb-2">Proyectos Diputada</h5>
+                                    <p class="text-muted">Consulte los proyectos creados por la diputada</p>
+                                </div>
                             </div>
                             {% endif %}
                         </div>
@@ -72,7 +77,7 @@
                             <a href="{% url 'proyectos:mis_proyectos' %}" class="btn btn-primary btn-custom me-3">
                                 <div class="btn-content">
                                     <i class="fas fa-file-signature"></i>
-                                    <span>Mis Proyectos</span>
+                                    <span>{% if user.perfil.es_diputada %}Mis Proyectos{% else %}Proyectos Diputada{% endif %}</span>
                                 </div>
                             </a>
                             {% endif %}

@@ -4,7 +4,8 @@ from django.contrib import messages
 from .models import Proyecto, Actualizacion, Temario, ProyectoTemario, Categoria
 from .forms import ProyectoForm, ActualizacionForm, ProyectoFilterForm, TemarioForm, TemarioFilterForm
 from django.core.paginator import Paginator
-from django.db.models import Q
+from django.db.models import Q, F
+from django.db import models
 from apps.usuario.views import es_diputada
 import json
 from django.http import HttpResponse
@@ -15,6 +16,7 @@ from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, PageBreak
 from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
 from reportlab.lib.units import inch
 from io import BytesIO
+from django.urls import reverse
 
 @login_required
 def lista_proyectos(request):
@@ -88,6 +90,9 @@ def detalle_proyecto(request, pk):
     puede_actualizar = request.user.perfil.es_diputada or proyecto.creado_por == request.user
     form_actualizacion = ActualizacionForm() if puede_actualizar else None
     
+    # Determinar si viene de mis_proyectos
+    from_mis_proyectos = request.GET.get('from') == 'mis_proyectos'
+    
     # Agregar el formulario de actualización
     form = ActualizacionForm()
     
@@ -97,6 +102,7 @@ def detalle_proyecto(request, pk):
         'form_actualizacion': form_actualizacion,
         'puede_actualizar': puede_actualizar,
         'form': form,
+        'from_mis_proyectos': from_mis_proyectos,
     }
     
     return render(request, 'proyectos/detalle_proyecto.html', context)
@@ -104,6 +110,7 @@ def detalle_proyecto(request, pk):
 @login_required
 def editar_proyecto(request, pk):
     proyecto = get_object_or_404(Proyecto, pk=pk)
+    from_mis_proyectos = request.GET.get('from') == 'mis_proyectos'
     
     # Verificar permisos:
     # - Diputadas pueden editar cualquier proyecto
@@ -117,7 +124,7 @@ def editar_proyecto(request, pk):
         if form.is_valid():
             form.save()
             messages.success(request, 'Proyecto actualizado exitosamente.')
-            return redirect('proyectos:detalle_proyecto', pk=proyecto.pk)
+            return redirect(f"{reverse('proyectos:detalle_proyecto', args=[proyecto.pk])}{'?from=mis_proyectos' if from_mis_proyectos else ''}")
     else:
         form = ProyectoForm(instance=proyecto)
         form.fields['categoria'].queryset = Categoria.objects.all()
@@ -125,7 +132,8 @@ def editar_proyecto(request, pk):
     return render(request, 'proyectos/editar_proyecto.html', {
         'form': form,
         'proyecto': proyecto,
-        'todas_categorias': Categoria.objects.all()
+        'todas_categorias': Categoria.objects.all(),
+        'from_mis_proyectos': from_mis_proyectos
     })
 
 @login_required
@@ -195,6 +203,7 @@ def eliminar_actualizacion(request, pk):
 @login_required
 def eliminar_proyecto(request, pk):
     proyecto = get_object_or_404(Proyecto, pk=pk)
+    from_mis_proyectos = request.GET.get('from') == 'mis_proyectos'
     
     # Verificar que el usuario sea el creador del proyecto o sea de su comisión
     if request.user == proyecto.creado_por or (
@@ -205,11 +214,9 @@ def eliminar_proyecto(request, pk):
             # Obtener todos los ProyectoTemario asociados antes de eliminar
             temarios_afectados = list(proyecto.temarios_asociados.all())
             
-            # Reordenar los proyectos en cada temario afectado
-            for pt in temarios_afectados:
-                pt.reordenar_despues_de_eliminar()
-
+            # Eliminar el proyecto (esto eliminará automáticamente sus ProyectoTemario)
             proyecto.delete()
+            
             messages.success(request, 'Proyecto eliminado exitosamente.')
             
             # Notificar si el proyecto estaba en temarios
@@ -219,7 +226,7 @@ def eliminar_proyecto(request, pk):
                     'El proyecto fue eliminado de los temarios en los que estaba incluido.'
                 )
 
-            return redirect('proyectos:lista_proyectos')
+            return redirect('proyectos:mis_proyectos' if from_mis_proyectos else 'proyectos:lista_proyectos')
     else:
         messages.error(request, 'No tienes permiso para eliminar este proyecto.')
     
@@ -326,11 +333,18 @@ def eliminar_temario(request, pk):
     return redirect('proyectos:listar_temarios')
 
 @login_required
-@user_passes_test(es_diputada)
 def mis_proyectos(request):
-    proyectos = Proyecto.objects.filter(
-        creado_por=request.user
-    ).select_related('categoria').order_by('-fecha_creacion')
+    # Si es diputada, mostrar sus proyectos
+    if request.user.perfil.es_diputada:
+        proyectos = Proyecto.objects.filter(
+            creado_por=request.user
+        ).select_related('categoria').order_by('-fecha_creacion')
+    else:
+        # Si es asesor, mostrar los proyectos de la diputada que correspondan a sus comisiones
+        proyectos = Proyecto.objects.filter(
+            creado_por__perfil__es_diputada=True,
+            categoria__in=request.user.perfil.categorias.all()
+        ).select_related('categoria').order_by('-fecha_creacion')
     
     filter_form = ProyectoFilterForm(request.GET, user=request.user)
     if filter_form.is_valid():
@@ -351,7 +365,7 @@ def mis_proyectos(request):
     context = {
         'proyectos': proyectos,
         'filter_form': filter_form,
-        'es_diputada': True,
+        'es_diputada': request.user.perfil.es_diputada,
         'section': 'mis_proyectos'
     }
     

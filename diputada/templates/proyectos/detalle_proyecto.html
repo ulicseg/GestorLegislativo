@@ -23,7 +23,8 @@
             </div>
             <div class="d-flex gap-2">
                 {% if user.perfil.es_diputada or user == proyecto.creado_por %}
-                    <a href="{% url 'proyectos:editar_proyecto' proyecto.pk %}" class="btn btn-custom-warning btn-sm">
+                    <a href="{% url 'proyectos:editar_proyecto' proyecto.pk %}{% if from_mis_proyectos %}?from=mis_proyectos{% endif %}" 
+                       class="btn btn-custom-warning btn-sm">
                         <i class="fas fa-edit me-1"></i>Editar Proyecto
                     </a>
                 {% endif %}
@@ -34,7 +35,8 @@
                         <i class="fas fa-trash-alt me-1"></i>Eliminar Proyecto
                     </button>
                 {% endif %}
-                <a href="{% url 'proyectos:lista_proyectos' %}" class="btn btn-custom-primary btn-sm">
+                <a href="{% if from_mis_proyectos %}{% url 'proyectos:mis_proyectos' %}{% else %}{% url 'proyectos:lista_proyectos' %}{% endif %}" 
+                   class="btn btn-custom-primary btn-sm">
                     <i class="fas fa-arrow-left me-1"></i>Volver
                 </a>
             </div>
@@ -192,7 +194,7 @@
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-                <form method="post" action="{% url 'proyectos:eliminar_proyecto' proyecto.pk %}">
+                <form method="post" action="{% url 'proyectos:eliminar_proyecto' proyecto.pk %}{% if from_mis_proyectos %}?from=mis_proyectos{% endif %}">
                     {% csrf_token %}
                     <button type="submit" class="btn btn-danger">
                         <i class="fas fa-trash-alt me-2"></i>Eliminar
