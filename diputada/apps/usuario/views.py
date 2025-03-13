@@ -100,15 +100,12 @@ def eliminar_asesor(request, pk):
     asesor = get_object_or_404(User, pk=pk, perfil__es_diputada=False)
     if request.method == 'POST':
         try:
-            # Primero eliminamos los proyectos asociados
-            from apps.proyectos.models import Proyecto
-            Proyecto.objects.filter(creado_por=asesor).delete()
-            
-            # Eliminamos el usuario y su perfil
-            asesor.delete()
-            messages.success(request, 'Asesor eliminado exitosamente.')
+            # En lugar de eliminar, desactivamos el usuario
+            asesor.is_active = False
+            asesor.save()
+            messages.success(request, 'Asesor desactivado exitosamente. Sus proyectos y actualizaciones se mantienen en el sistema.')
         except Exception as e:
-            messages.error(request, f'Error al eliminar el asesor: {str(e)}')
+            messages.error(request, f'Error al desactivar el asesor: {str(e)}')
     return redirect('usuario:gestion')
 
 @login_required
@@ -240,4 +237,18 @@ def crear_diputada(request):
                 for error in errors:
                     messages.error(request, f'Error en {field}: {error}')
     
+    return redirect('usuario:gestion')
+
+@login_required
+@user_passes_test(es_diputada)
+@csrf_protect
+def reactivar_asesor(request, pk):
+    asesor = get_object_or_404(User, pk=pk, perfil__es_diputada=False)
+    if request.method == 'POST':
+        try:
+            asesor.is_active = True
+            asesor.save()
+            messages.success(request, 'Asesor reactivado exitosamente.')
+        except Exception as e:
+            messages.error(request, f'Error al reactivar el asesor: {str(e)}')
     return redirect('usuario:gestion')

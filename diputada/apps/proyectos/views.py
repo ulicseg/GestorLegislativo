@@ -17,6 +17,40 @@ from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
 from reportlab.lib.units import inch
 from io import BytesIO
 from django.urls import reverse
+from bs4 import BeautifulSoup
+import re
+from html import unescape
+
+def limpiar_html(html_content):
+    """Limpia el HTML complejo y lo convierte a un formato simple."""
+    if not html_content:
+        return ""
+    
+    # Usar BeautifulSoup para parsear el HTML
+    soup = BeautifulSoup(html_content, 'html.parser')
+    
+    # Mantener los saltos de línea
+    for br in soup.find_all('br'):
+        br.replace_with('\n')
+    
+    # Convertir estilos de texto
+    for tag in soup.find_all(['b', 'strong']):
+        tag.replace_with(f'<b>{tag.get_text()}</b>')
+    
+    for tag in soup.find_all(['i', 'em']):
+        tag.replace_with(f'<i>{tag.get_text()}</i>')
+    
+    for tag in soup.find_all('u'):
+        tag.replace_with(f'<u>{tag.get_text()}</u>')
+    
+    # Obtener el texto y mantener solo las etiquetas básicas
+    text = soup.get_text()
+    
+    # Limpiar espacios extra y caracteres especiales
+    text = re.sub(r'\s+', ' ', text).strip()
+    text = unescape(text)
+    
+    return text
 
 @login_required
 def lista_proyectos(request):
@@ -79,19 +113,22 @@ def crear_proyecto(request):
 @login_required
 def detalle_proyecto(request, pk):
     proyecto = get_object_or_404(Proyecto, pk=pk)
+    from_mis_proyectos = request.GET.get('from') == 'mis_proyectos'
     
     # Verificar acceso
-    if not request.user.perfil.es_diputada and proyecto.categoria not in request.user.perfil.categorias.all():
-        messages.error(request, 'No tienes permiso para ver este proyecto.')
-        return redirect('proyectos:lista_proyectos')
+    if not request.user.perfil.es_diputada:
+        # Si viene de mis_proyectos y el proyecto es de la diputada, permitir acceso
+        if from_mis_proyectos and proyecto.creado_por.perfil.es_diputada:
+            pass
+        # Si no viene de mis_proyectos, verificar que pertenezca a la comisión
+        elif proyecto.categoria not in request.user.perfil.categorias.all():
+            messages.error(request, 'No tienes permiso para ver este proyecto.')
+            return redirect('proyectos:lista_proyectos')
     
     actualizaciones = proyecto.actualizaciones.all()
     # Mostrar formulario de actualización si es diputada o es su proyecto
     puede_actualizar = request.user.perfil.es_diputada or proyecto.creado_por == request.user
     form_actualizacion = ActualizacionForm() if puede_actualizar else None
-    
-    # Determinar si viene de mis_proyectos
-    from_mis_proyectos = request.GET.get('from') == 'mis_proyectos'
     
     # Agregar el formulario de actualización
     form = ActualizacionForm()
@@ -340,10 +377,9 @@ def mis_proyectos(request):
             creado_por=request.user
         ).select_related('categoria').order_by('-fecha_creacion')
     else:
-        # Si es asesor, mostrar los proyectos de la diputada que correspondan a sus comisiones
+        # Si es asesor, mostrar todos los proyectos de la diputada sin restricción de comisión
         proyectos = Proyecto.objects.filter(
-            creado_por__perfil__es_diputada=True,
-            categoria__in=request.user.perfil.categorias.all()
+            creado_por__perfil__es_diputada=True
         ).select_related('categoria').order_by('-fecha_creacion')
     
     filter_form = ProyectoFilterForm(request.GET, user=request.user)
@@ -492,7 +528,6 @@ def descargar_temario_pdf(request, pk):
     ).prefetch_related('proyecto__actualizaciones', 'proyecto__actualizaciones__autor')):
         
         # Título del proyecto con su número de orden y comisión al lado
-        # Convertir el nombre de la categoría a minúsculas y capitalizar la primera letra
         categoria_nombre = pt.proyecto.categoria.nombre.lower().capitalize()
         
         elements.append(Paragraph(
@@ -500,8 +535,9 @@ def descargar_temario_pdf(request, pk):
             heading_style
         ))
         
-        # Descripción del proyecto
-        elements.append(Paragraph(pt.proyecto.descripcion, content_style))
+        # Descripción del proyecto (limpiada)
+        descripcion_limpia = limpiar_html(pt.proyecto.descripcion)
+        elements.append(Paragraph(descripcion_limpia, content_style))
         
         if pt.proyecto.actualizaciones.exists():
             elements.append(Paragraph("Historial de Actualizaciones:", heading_style))
@@ -510,8 +546,10 @@ def descargar_temario_pdf(request, pk):
                 fecha_act = actualizacion.fecha
                 fecha_act_esp = f"{fecha_act.day} de {meses[fecha_act.month - 1]}"
                 
+                # Limpiar el contenido de la actualización
+                contenido_limpio = limpiar_html(actualizacion.contenido)
                 elements.append(Paragraph(
-                    actualizacion.contenido,
+                    contenido_limpio,
                     update_style
                 ))
                 
@@ -534,7 +572,12 @@ def descargar_temario_pdf(request, pk):
         meta_style
     ))
     
-    doc.build(elements)
+    try:
+        doc.build(elements)
+    except Exception as e:
+        messages.error(request, f'Error al generar el PDF: {str(e)}')
+        return redirect('proyectos:detalle_temario', pk=temario.pk)
+    
     pdf = buffer.getvalue()
     buffer.close()
     

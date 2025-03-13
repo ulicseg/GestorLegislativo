@@ -11,6 +11,7 @@ urlpatterns = [
     path('gestion/asesor/crear/', views.crear_asesor, name='crear_asesor'),
     path('gestion/asesor/<int:pk>/editar/', views.editar_asesor, name='editar_asesor'),
     path('gestion/asesor/<int:pk>/eliminar/', views.eliminar_asesor, name='eliminar_asesor'),
+    path('gestion/asesor/<int:pk>/reactivar/', views.reactivar_asesor, name='reactivar_asesor'),
     path('gestion/categoria/crear/', views.crear_categoria, name='crear_categoria'),
     path('gestion/categoria/<int:pk>/editar/', views.editar_categoria, name='editar_categoria'),
     path('gestion/categoria/<int:pk>/eliminar/', views.eliminar_categoria, name='eliminar_categoria'),
