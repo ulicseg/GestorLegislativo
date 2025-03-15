@@ -69,9 +69,13 @@ def lista_proyectos(request):
     # Aplicar filtros si el formulario es válido
     if filter_form.is_valid():
         busqueda = filter_form.cleaned_data.get('busqueda')
+        numero = filter_form.cleaned_data.get('numero')
         
         if busqueda:
             proyectos_list = proyectos_list.filter(titulo__icontains=busqueda)
+            
+        if numero:
+            proyectos_list = proyectos_list.filter(numero__icontains=numero)
         
         # Solo aplicar filtro de categoría si es diputada
         if request.user.perfil.es_diputada:
@@ -385,12 +389,15 @@ def mis_proyectos(request):
     filter_form = ProyectoFilterForm(request.GET, user=request.user)
     if filter_form.is_valid():
         busqueda = filter_form.cleaned_data.get('busqueda')
+        numero = filter_form.cleaned_data.get('numero')
         categoria = filter_form.cleaned_data.get('categoria')
         
         if busqueda:
-            proyectos = proyectos.filter(
-                titulo__icontains=busqueda
-            )
+            proyectos = proyectos.filter(titulo__icontains=busqueda)
+            
+        if numero:
+            proyectos = proyectos.filter(numero__icontains=numero)
+            
         if categoria:
             proyectos = proyectos.filter(categoria=categoria)
     
@@ -410,11 +417,6 @@ def mis_proyectos(request):
 @login_required
 def descargar_temario_pdf(request, pk):
     temario = get_object_or_404(Temario, pk=pk)
-    
-    # Verificar permisos
-    if not request.user.perfil.es_diputada and not request.user.perfil.categorias.filter(id=temario.comision.id).exists():
-        messages.error(request, 'No tienes permiso para ver este temario.')
-        return redirect('proyectos:listar_temarios')
     
     # Configurar el documento
     buffer = BytesIO()

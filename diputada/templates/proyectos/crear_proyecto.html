@@ -14,6 +14,27 @@
             <div class="card-body">
                 <form method="post">
                     {% csrf_token %}
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label for="{{ form.numero.id_for_label }}" class="form-label">Número</label>
+                            {{ form.numero }}
+                            {% if form.numero.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {{ form.numero.errors }}
+                                </div>
+                            {% endif %}
+                            <small class="form-text text-muted">Formato: XXXX/XX (ej: 2323/23)</small>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="{{ form.tipo.id_for_label }}" class="form-label">Tipo de Proyecto</label>
+                            {{ form.tipo }}
+                            {% if form.tipo.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {{ form.tipo.errors }}
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
                     <div class="mb-3">
                         <label for="{{ form.titulo.id_for_label }}" class="form-label">Título</label>
                         {{ form.titulo }}

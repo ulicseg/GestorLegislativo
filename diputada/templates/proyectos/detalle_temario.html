@@ -61,6 +61,8 @@
                             <span class="badge bg-primary me-2">{{ pt.orden }}</span>
                             <a href="{% url 'proyectos:detalle_proyecto' pt.proyecto.pk %}" 
                                class="text-primary text-decoration-none">
+                                {{ pt.proyecto.get_tipo_display }} 
+                                <span class="proyecto-numero">{{ pt.proyecto.numero }}</span> 
                                 {{ pt.proyecto.titulo }}
                             </a>
                         </h6>
@@ -72,7 +74,7 @@
                 <div class="card-body">
                     <div class="mb-3">
                         <div class="border-start border-primary border-3 ps-3 mb-3" style="background-color: #e8e8e8;">
-                            {{ pt.proyecto.descripcion|safe|truncatewords_html:50 }}
+                            {{ pt.proyecto.descripcion|safe }}
                         </div>
                     </div>
                     
@@ -80,7 +82,7 @@
                         <h6 class="mb-3">
                             <i class="fas fa-history me-2"></i>Últimas actualizaciones:
                         </h6>
-                        {% for actualizacion in pt.proyecto.actualizaciones.all|slice:":3" %}
+                        {% for actualizacion in pt.proyecto.actualizaciones.all %}
                             <div class="border-start border-secondary ps-3 mb-2" 
                                  style="background-color: white; padding: 0.8rem; border-radius: 0 8px 8px 0; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">
                                 <div class="small text-muted">
@@ -132,4 +134,15 @@
         </div>
     </div>
 </div>
+
+<style>
+    .proyecto-numero {
+        background-color: rgba(21, 54, 100, 0.15);
+        color: #153664;
+        padding: 2px 8px;
+        border-radius: 4px;
+        font-weight: bold;
+        display: inline-block;
+    }
+</style>
 {% endblock %} 

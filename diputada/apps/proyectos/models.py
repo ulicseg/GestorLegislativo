@@ -16,6 +16,13 @@ class Categoria(models.Model):
         verbose_name_plural = 'Categorías'
 
 class Proyecto(models.Model):
+    TIPO_CHOICES = [
+        ('ley', 'Proyecto de Ley'),
+        ('resolucion', 'Proyecto de Resolución'),
+    ]
+    
+    numero = models.CharField(max_length=20, unique=True, help_text="Formato: XXXX/XX")
+    tipo = models.CharField(max_length=20, choices=TIPO_CHOICES, default='ley')
     titulo = models.CharField(max_length=200)
     descripcion = RichTextField()
     categoria = models.ForeignKey(Categoria, on_delete=models.CASCADE)
@@ -24,7 +31,7 @@ class Proyecto(models.Model):
     fecha_modificacion = models.DateTimeField(auto_now=True)
 
     def __str__(self):
-        return self.titulo
+        return f"{self.get_tipo_display()} {self.numero} {self.titulo}"
 
     def save(self, *args, **kwargs):
         if not self.pk:  # Solo validar al crear un nuevo proyecto
@@ -32,6 +39,12 @@ class Proyecto(models.Model):
             if not self.creado_por.perfil.es_diputada and self.categoria not in self.creado_por.perfil.categorias.all():
                 raise ValidationError('No tienes permiso para crear proyectos en esta categoría.')
         super().save(*args, **kwargs)
+
+    def clean(self):
+        # Validar formato del número
+        if self.numero:
+            if not '/' in self.numero:
+                raise ValidationError({'numero': 'El número debe tener formato XXXX/XX'})
 
 class Actualizacion(models.Model):
     proyecto = models.ForeignKey(Proyecto, on_delete=models.CASCADE, related_name='actualizaciones')

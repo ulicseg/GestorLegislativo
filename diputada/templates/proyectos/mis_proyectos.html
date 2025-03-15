@@ -18,7 +18,7 @@
 <div class="card shadow-sm mb-4">
     <div class="card-body">
         <form method="get" class="row g-3">
-            <div class="col-md-{% if es_diputada %}6{% else %}8{% endif %}">
+            <div class="col-md-4">
                 <div class="input-group">
                     <span class="input-group-text bg-light">
                         <i class="fas fa-search text-muted"></i>
@@ -26,8 +26,16 @@
                     {{ filter_form.busqueda }}
                 </div>
             </div>
+            <div class="col-md-3">
+                <div class="input-group">
+                    <span class="input-group-text bg-light">
+                        <i class="fas fa-hashtag text-muted"></i>
+                    </span>
+                    {{ filter_form.numero }}
+                </div>
+            </div>
             {% if es_diputada %}
-            <div class="col-md-4">
+            <div class="col-md-3">
                 <div class="input-group">
                     <span class="input-group-text bg-light">
                         <i class="fas fa-tag text-muted"></i>
@@ -51,7 +59,11 @@
         <div class="col-md-6 mb-4">
             <div class="card mb-4 shadow-sm">
                 <div class="card-header">
-                    <h5 class="mb-0">{{ proyecto.titulo }}</h5>
+                    <h5 class="mb-0">
+                        {{ proyecto.get_tipo_display }} 
+                        <span class="proyecto-numero">{{ proyecto.numero }}</span> 
+                        {{ proyecto.titulo }}
+                    </h5>
                     <span class="badge" style="background-color: #965a0091;">
                         {{ proyecto.categoria.nombre|truncatechars:40 }}
                     </span>
@@ -82,6 +94,17 @@
         </div>
     {% endfor %}
 </div>
+
+<style>
+    .proyecto-numero {
+        background-color: rgba(21, 54, 100, 0.15);
+        color: #153664;
+        padding: 2px 8px;
+        border-radius: 4px;
+        font-weight: bold;
+        display: inline-block;
+    }
+</style>
 
 {% with proyectos as page_obj %}
     {% include 'includes/pagination.html' %}

@@ -3,7 +3,7 @@
     <ul class="pagination justify-content-center">
         {% if page_obj.has_previous %}
             <li class="page-item">
-                <a class="page-link" href="?page={{ page_obj.previous_page_number }}{% if request.GET.busqueda %}&busqueda={{ request.GET.busqueda }}{% endif %}{% if request.GET.categoria %}&categoria={{ request.GET.categoria }}{% endif %}">
+                <a class="page-link" href="?page={{ page_obj.previous_page_number }}{% if request.GET.busqueda %}&busqueda={{ request.GET.busqueda }}{% endif %}{% if request.GET.numero %}&numero={{ request.GET.numero }}{% endif %}{% if request.GET.categoria %}&categoria={{ request.GET.categoria }}{% endif %}">
                     <i class="fas fa-chevron-left"></i>
                 </a>
             </li>
@@ -22,14 +22,14 @@
                 </li>
             {% else %}
                 <li class="page-item">
-                    <a class="page-link" href="?page={{ i }}{% if request.GET.busqueda %}&busqueda={{ request.GET.busqueda }}{% endif %}{% if request.GET.categoria %}&categoria={{ request.GET.categoria }}{% endif %}">{{ i }}</a>
+                    <a class="page-link" href="?page={{ i }}{% if request.GET.busqueda %}&busqueda={{ request.GET.busqueda }}{% endif %}{% if request.GET.numero %}&numero={{ request.GET.numero }}{% endif %}{% if request.GET.categoria %}&categoria={{ request.GET.categoria }}{% endif %}">{{ i }}</a>
                 </li>
             {% endif %}
         {% endfor %}
 
         {% if page_obj.has_next %}
             <li class="page-item">
-                <a class="page-link" href="?page={{ page_obj.next_page_number }}{% if request.GET.busqueda %}&busqueda={{ request.GET.busqueda }}{% endif %}{% if request.GET.categoria %}&categoria={{ request.GET.categoria }}{% endif %}">
+                <a class="page-link" href="?page={{ page_obj.next_page_number }}{% if request.GET.busqueda %}&busqueda={{ request.GET.busqueda }}{% endif %}{% if request.GET.numero %}&numero={{ request.GET.numero }}{% endif %}{% if request.GET.categoria %}&categoria={{ request.GET.categoria }}{% endif %}">
                     <i class="fas fa-chevron-right"></i>
                 </a>
             </li>

@@ -60,7 +60,7 @@
     {% for pt in proyectos_temario %}
     <div class="proyecto">
         <div class="proyecto-titulo">
-            <h3>{{ pt.orden }}. {{ pt.proyecto.titulo }}</h3>
+            <h3>{{ pt.orden }}. {{ pt.proyecto.get_tipo_display }} {{ pt.proyecto.numero }} {{ pt.proyecto.titulo }}</h3>
         </div>
         <div class="proyecto-descripcion">
             {{ pt.proyecto.descripcion|safe }}

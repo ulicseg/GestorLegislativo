@@ -23,7 +23,7 @@
 <div class="card shadow-sm mb-4">
     <div class="card-body">
         <form method="get" class="row g-3">
-            <div class="{% if user.perfil.es_diputada %}col-md-5{% else %}col-md-10{% endif %}">
+            <div class="col-md-4">
                 <div class="input-group">
                     <span class="input-group-text bg-light">
                         <i class="fas fa-search text-muted"></i>
@@ -31,8 +31,16 @@
                     {{ filter_form.busqueda }}
                 </div>
             </div>
+            <div class="col-md-3">
+                <div class="input-group">
+                    <span class="input-group-text bg-light">
+                        <i class="fas fa-hashtag text-muted"></i>
+                    </span>
+                    {{ filter_form.numero }}
+                </div>
+            </div>
             {% if user.perfil.es_diputada %}
-                <div class="col-md-5">
+                <div class="col-md-3">
                     <div class="input-group">
                         <span class="input-group-text bg-light">
                             <i class="fas fa-tag text-muted"></i>
@@ -41,7 +49,7 @@
                     </div>
                 </div>
             {% endif %}
-            <div class="{% if user.perfil.es_diputada %}col-md-2{% else %}col-md-2{% endif %}">
+            <div class="col-md-2">
                 <button type="submit" class="btn btn-primary w-100">
                     Filtrar
                 </button>
@@ -56,7 +64,11 @@
         <div class="col-md-6 mb-4">
             <div class="card mb-4 shadow-sm">
                 <div class="card-header">
-                    <h5 class="card-title">{{ proyecto.titulo|escape }}</h5>
+                    <h5 class="card-title">
+                        {{ proyecto.get_tipo_display }} 
+                        <span class="proyecto-numero">{{ proyecto.numero }}</span> 
+                        {{ proyecto.titulo|escape }}
+                    </h5>
                     <span class="badge" style="background-color: #965a0091;">
                         {{ proyecto.categoria.nombre|escape }}
                     </span>
@@ -98,7 +110,7 @@
     <ul class="pagination justify-content-center">
         {% if proyectos.has_previous %}
             <li class="page-item">
-                <a class="page-link" href="?page={{ proyectos.previous_page_number }}{% if request.GET.busqueda %}&busqueda={{ request.GET.busqueda }}{% endif %}{% if request.GET.categoria %}&categoria={{ request.GET.categoria }}{% endif %}">
+                <a class="page-link" href="?page={{ proyectos.previous_page_number }}{% if request.GET.busqueda %}&busqueda={{ request.GET.busqueda }}{% endif %}{% if request.GET.numero %}&numero={{ request.GET.numero }}{% endif %}{% if request.GET.categoria %}&categoria={{ request.GET.categoria }}{% endif %}">
                     <i class="fas fa-chevron-left"></i>
                 </a>
             </li>
@@ -117,14 +129,14 @@
                 </li>
             {% else %}
                 <li class="page-item">
-                    <a class="page-link" href="?page={{ i }}{% if request.GET.busqueda %}&busqueda={{ request.GET.busqueda }}{% endif %}{% if request.GET.categoria %}&categoria={{ request.GET.categoria }}{% endif %}">{{ i }}</a>
+                    <a class="page-link" href="?page={{ i }}{% if request.GET.busqueda %}&busqueda={{ request.GET.busqueda }}{% endif %}{% if request.GET.numero %}&numero={{ request.GET.numero }}{% endif %}{% if request.GET.categoria %}&categoria={{ request.GET.categoria }}{% endif %}">{{ i }}</a>
                 </li>
             {% endif %}
         {% endfor %}
 
         {% if proyectos.has_next %}
             <li class="page-item">
-                <a class="page-link" href="?page={{ proyectos.next_page_number }}{% if request.GET.busqueda %}&busqueda={{ request.GET.busqueda }}{% endif %}{% if request.GET.categoria %}&categoria={{ request.GET.categoria }}{% endif %}">
+                <a class="page-link" href="?page={{ proyectos.next_page_number }}{% if request.GET.busqueda %}&busqueda={{ request.GET.busqueda }}{% endif %}{% if request.GET.numero %}&numero={{ request.GET.numero }}{% endif %}{% if request.GET.categoria %}&categoria={{ request.GET.categoria }}{% endif %}">
                     <i class="fas fa-chevron-right"></i>
                 </a>
             </li>
@@ -139,8 +151,18 @@
 </nav>
 {% endif %}
 
-<!-- Agregar estos estilos específicos para los botones en las cards -->
+<!-- Estilos para el proyecto -->
 <style>
+    .proyecto-numero {
+        background-color: rgba(21, 54, 100, 0.15);
+        color: #153664;
+        padding: 2px 8px;
+        border-radius: 4px;
+        font-weight: bold;
+        display: inline-block;
+    }
+    
+    /* Estilos para los botones en las cards */
     .btn-custom {
         padding: 0.5rem 1rem;
         border-radius: 6px;

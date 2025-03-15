@@ -2,12 +2,15 @@ from django import forms
 from .models import Proyecto, Actualizacion, Categoria, Temario
 from ckeditor.widgets import CKEditorWidget
 from ckeditor_uploader.widgets import CKEditorUploadingWidget
+from django.core.exceptions import ValidationError
 
 class ProyectoForm(forms.ModelForm):
     class Meta:
         model = Proyecto
-        fields = ['titulo', 'descripcion', 'categoria']
+        fields = ['numero', 'tipo', 'titulo', 'descripcion', 'categoria']
         widgets = {
+            'numero': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Ej: 2323/23'}),
+            'tipo': forms.Select(attrs={'class': 'form-control'}),
             'titulo': forms.TextInput(attrs={'class': 'form-control'}),
             'descripcion': CKEditorWidget(),
             'categoria': forms.Select(attrs={'class': 'form-control'}),
@@ -23,6 +26,19 @@ class ProyectoForm(forms.ModelForm):
         else:
             # Si es edición o es diputada, mostrar todas las categorías
             self.fields['categoria'].queryset = Categoria.objects.all()
+    
+    def clean_numero(self):
+        numero = self.cleaned_data.get('numero')
+        if numero:
+            # Verificar si ya existe un proyecto con este número (excepto en edición)
+            if Proyecto.objects.filter(numero=numero).exists():
+                if not self.instance.pk or self.instance.numero != numero:
+                    raise ValidationError('Ya existe un proyecto con este número.')
+            
+            # Verificar formato
+            if '/' not in numero:
+                raise ValidationError('El número debe tener formato XXXX/XX')
+        return numero
 
 class ActualizacionForm(forms.ModelForm):
     contenido = forms.CharField(widget=CKEditorWidget())
@@ -32,6 +48,14 @@ class ActualizacionForm(forms.ModelForm):
         fields = ['contenido']
 
 class ProyectoFilterForm(forms.Form):
+    numero = forms.CharField(
+        required=False,
+        widget=forms.TextInput(attrs={
+            'class': 'form-control',
+            'placeholder': 'Buscar por número...'
+        })
+    )
+    
     busqueda = forms.CharField(
         required=False,
         widget=forms.TextInput(attrs={

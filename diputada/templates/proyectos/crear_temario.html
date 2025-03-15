@@ -73,21 +73,25 @@
             </div>
             <div class="modal-body">
                 <input type="text" class="form-control mb-3" id="buscarProyecto" 
-                       placeholder="Buscar proyecto...">
+                       placeholder="Buscar por número, tipo o título...">
                 
                 <div class="list-group" id="listaProyectos">
                     {% for proyecto in proyectos_disponibles %}
                         <div class="list-group-item list-group-item-action">
                             <div class="d-flex justify-content-between align-items-center">
                                 <div>
-                                    <h6 class="mb-1">{{ proyecto.titulo }}</h6>
+                                    <h6 class="mb-1">
+                                        {{ proyecto.get_tipo_display }} 
+                                        <span class="proyecto-numero">{{ proyecto.numero }}</span> 
+                                        {{ proyecto.titulo }}
+                                    </h6>
                                     <small class="text-muted">
                                         {{ proyecto.categoria.nombre }} - 
                                         {{ proyecto.creado_por.get_full_name }}
                                     </small>
                                 </div>
                                 <button type="button" class="btn btn-sm btn-outline-primary"
-                                        onclick="agregarProyecto({{ proyecto.id }}, '{{ proyecto.titulo }}')">
+                                        onclick="agregarProyecto({{ proyecto.id }}, '{{ proyecto.get_tipo_display }} {{ proyecto.numero }} {{ proyecto.titulo|escapejs }}')">
                                     <i class="fas fa-plus"></i>
                                 </button>
                             </div>
@@ -98,6 +102,17 @@
         </div>
     </div>
 </div>
+
+<style>
+    .proyecto-numero {
+        background-color: rgba(21, 54, 100, 0.15);
+        color: #153664;
+        padding: 2px 8px;
+        border-radius: 4px;
+        font-weight: bold;
+        display: inline-block;
+    }
+</style>
 
 {% block extra_js %}
 <script>
@@ -167,14 +182,14 @@ document.getElementById('temarioForm').addEventListener('submit', function(e) {
     this.appendChild(proyectosInput);
 });
 
-// Búsqueda de proyectos
+// Búsqueda mejorada de proyectos
 document.getElementById('buscarProyecto').addEventListener('input', function(e) {
     const busqueda = e.target.value.toLowerCase();
     const items = document.querySelectorAll('#listaProyectos .list-group-item');
     
     items.forEach(item => {
-        const titulo = item.querySelector('h6').textContent.toLowerCase();
-        const visible = titulo.includes(busqueda);
+        const contenido = item.querySelector('h6').textContent.toLowerCase();
+        const visible = contenido.includes(busqueda);
         item.style.display = visible ? '' : 'none';
     });
 });
@@ -183,7 +198,7 @@ document.getElementById('buscarProyecto').addEventListener('input', function(e) 
 // Cargar proyectos existentes si estamos editando
 {% for pt in temario.proyectotemario_set.all %}
     proyectosSeleccionados.set({{ pt.proyecto.id }}, {
-        titulo: '{{ pt.proyecto.titulo|escapejs }}',
+        titulo: '{{ pt.proyecto.get_tipo_display }} {{ pt.proyecto.numero }} {{ pt.proyecto.titulo|escapejs }}',
         orden: {{ pt.orden }}
     });
 {% endfor %}

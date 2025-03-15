@@ -8,7 +8,11 @@
     <div class="card-header bg-light">
         <div class="d-flex justify-content-between align-items-center">
             <div>
-                <h4 class="mb-1">{{ proyecto.titulo }}</h4>
+                <h4 class="mb-1">
+                    {{ proyecto.get_tipo_display }} 
+                    <span class="proyecto-numero">{{ proyecto.numero }}</span> 
+                    {{ proyecto.titulo }}
+                </h4>
                 <div class="text-muted small">
                     <span class="me-3">
                         <i class="fas fa-user me-1"></i>{{ proyecto.creado_por.get_full_name }}
@@ -128,6 +132,15 @@
 </div>
 
 <style>
+    .proyecto-numero {
+        background-color: rgba(21, 54, 100, 0.15);
+        color: #153664;
+        padding: 2px 8px;
+        border-radius: 4px;
+        font-weight: bold;
+        display: inline-block;
+    }
+
     .proyecto-descripcion {
         background-color: #f8f9fa;
         padding: 1rem;
