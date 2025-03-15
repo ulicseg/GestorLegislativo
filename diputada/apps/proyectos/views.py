@@ -55,13 +55,8 @@ def limpiar_html(html_content):
 @login_required
 def lista_proyectos(request):
     # Obtener proyectos según el rol del usuario
-    if request.user.perfil.es_diputada:
-        proyectos_list = Proyecto.objects.select_related('categoria', 'creado_por').all()
-    else:
-        # Para asesores, mostrar proyectos de todas sus categorías
-        proyectos_list = Proyecto.objects.filter(
-            categoria__in=request.user.perfil.categorias.all()
-        ).select_related('categoria', 'creado_por')
+    # Ahora todos los usuarios pueden ver todos los proyectos
+    proyectos_list = Proyecto.objects.select_related('categoria', 'creado_por').all()
     
     # Inicializar el formulario de filtro con el usuario actual
     filter_form = ProyectoFilterForm(request.GET, user=request.user)
@@ -119,20 +114,13 @@ def detalle_proyecto(request, pk):
     proyecto = get_object_or_404(Proyecto, pk=pk)
     from_mis_proyectos = request.GET.get('from') == 'mis_proyectos'
     
-    # Verificar acceso
-    if not request.user.perfil.es_diputada:
-        # Si viene de mis_proyectos y el proyecto es de la diputada, permitir acceso
-        if from_mis_proyectos and proyecto.creado_por.perfil.es_diputada:
-            pass
-        # Si no viene de mis_proyectos, verificar que pertenezca a la comisión
-        elif proyecto.categoria not in request.user.perfil.categorias.all():
-            messages.error(request, 'No tienes permiso para ver este proyecto.')
-            return redirect('proyectos:lista_proyectos')
+    # Eliminar verificación de acceso por comisión
+    # Todos los asesores pueden ver todos los proyectos
     
     actualizaciones = proyecto.actualizaciones.all()
-    # Mostrar formulario de actualización si es diputada o es su proyecto
-    puede_actualizar = request.user.perfil.es_diputada or proyecto.creado_por == request.user
-    form_actualizacion = ActualizacionForm() if puede_actualizar else None
+    # Todos los usuarios pueden actualizar cualquier proyecto
+    puede_actualizar = True
+    form_actualizacion = ActualizacionForm()
     
     # Agregar el formulario de actualización
     form = ActualizacionForm()
@@ -153,12 +141,8 @@ def editar_proyecto(request, pk):
     proyecto = get_object_or_404(Proyecto, pk=pk)
     from_mis_proyectos = request.GET.get('from') == 'mis_proyectos'
     
-    # Verificar permisos:
-    # - Diputadas pueden editar cualquier proyecto
-    # - Asesores pueden editar proyectos de sus comisiones
-    if not request.user.perfil.es_diputada and proyecto.categoria not in request.user.perfil.categorias.all():
-        messages.error(request, 'No tienes permiso para editar este proyecto.')
-        return redirect('proyectos:lista_proyectos')
+    # Eliminar verificación de permisos por comisión
+    # Todos los asesores pueden editar cualquier proyecto
     
     if request.method == 'POST':
         form = ProyectoForm(request.POST, instance=proyecto)

@@ -66,6 +66,12 @@
                     <button class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#nuevoAsesor">
                         <i class="fas fa-user-plus me-1"></i>Nuevo Asesor
                     </button>
+                    <form method="post" action="{% url 'usuario:asignar_todas_categorias' %}" class="d-inline">
+                        {% csrf_token %}
+                        <button type="submit" class="btn btn-warning btn-sm ms-2">
+                            <i class="fas fa-check-circle me-1"></i>Asignar todas las comisiones
+                        </button>
+                    </form>
                     {% if is_superuser %}
                         <button class="btn btn-success btn-sm ms-2" data-bs-toggle="modal" data-bs-target="#nuevaDiputada">
                             <i class="fas fa-user-tie me-1"></i>Nueva Diputada
@@ -74,6 +80,11 @@
                 </div>
             </div>
             <div class="card-body p-0">
+                <div class="alert alert-info m-3">
+                    <i class="fas fa-info-circle me-2"></i>
+                    <strong>Información:</strong> Todos los asesores tienen acceso a todas las comisiones. 
+                    Utilice el botón "Asignar todas las comisiones" para actualizar los permisos de los asesores existentes.
+                </div>
                 <div class="table-responsive">
                     <table class="table table-hover mb-0">
                         <thead>
@@ -203,25 +214,10 @@
                         </div>
                     </div>
 
-                    <!-- Categoría -->
-                    <div class="mb-3">
-                        <label class="form-label">Categorías</label>
-                        <div class="categorias-container border rounded p-3">
-                            {% for categoria in categorias %}
-                            <div class="form-check">
-                                <input type="checkbox" 
-                                       name="categorias" 
-                                       value="{{ categoria.id }}" 
-                                       class="form-check-input" 
-                                       id="cat_{{ categoria.id }}_new">
-                                <label class="form-check-label" for="cat_{{ categoria.id }}_new">
-                                    {{ categoria.nombre }}
-                                    <small class="text-muted d-block">{{ categoria.descripcion|truncatechars:50 }}</small>
-                                </label>
-                            </div>
-                            {% endfor %}
-                        </div>
-                        <div class="form-text">Seleccione las categorías a las que pertenecerá el asesor</div>
+                    <!-- Nota informativa sobre categorías -->
+                    <div class="alert alert-info">
+                        <i class="fas fa-info-circle me-2"></i>
+                        El asesor tendrá acceso automáticamente a todas las comisiones.
                     </div>
                 </div>
                 <div class="modal-footer">
@@ -262,24 +258,11 @@
                         <input type="email" class="form-control" id="email{{ asesor.id }}" 
                                name="email" value="{{ asesor.email }}" required>
                     </div>
-                    <div class="mb-3">
-                        <label class="form-label">Categorías</label>
-                        <div class="categorias-container border rounded p-3">
-                            {% for categoria in categorias %}
-                            <div class="form-check">
-                                <input type="checkbox" 
-                                       name="categorias" 
-                                       value="{{ categoria.id }}" 
-                                       class="form-check-input" 
-                                       id="cat_{{ categoria.id }}_{{ asesor.id }}"
-                                       {% if categoria in asesor.perfil.categorias.all %}checked{% endif %}>
-                                <label class="form-check-label" for="cat_{{ categoria.id }}_{{ asesor.id }}">
-                                    {{ categoria.nombre }}
-                                    <small class="text-muted d-block">{{ categoria.descripcion|truncatechars:50 }}</small>
-                                </label>
-                            </div>
-                            {% endfor %}
-                        </div>
+                    
+                    <!-- Nota informativa sobre categorías -->
+                    <div class="alert alert-info">
+                        <i class="fas fa-info-circle me-2"></i>
+                        El asesor tiene acceso automáticamente a todas las comisiones.
                     </div>
                 </div>
                 <div class="modal-footer">

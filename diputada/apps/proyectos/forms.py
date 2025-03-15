@@ -20,12 +20,8 @@ class ProyectoForm(forms.ModelForm):
         user = kwargs.pop('user', None)
         super().__init__(*args, **kwargs)
         
-        if user and not user.perfil.es_diputada and not self.instance.pk:
-            # Si es un asesor creando un nuevo proyecto, mostrar solo sus categorías
-            self.fields['categoria'].queryset = user.perfil.categorias.all()
-        else:
-            # Si es edición o es diputada, mostrar todas las categorías
-            self.fields['categoria'].queryset = Categoria.objects.all()
+        # Mostrar todas las categorías a todos los usuarios
+        self.fields['categoria'].queryset = Categoria.objects.all()
     
     def clean_numero(self):
         numero = self.cleaned_data.get('numero')

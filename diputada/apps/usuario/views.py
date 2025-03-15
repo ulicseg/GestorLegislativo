@@ -51,12 +51,11 @@ def crear_asesor(request):
                     perfil.es_diputada = False
                     perfil.save()
                     
-                    # 3. Asignar categorías
-                    categorias = form.cleaned_data.get('categorias')
-                    if categorias:
-                        perfil.categorias.set(categorias)  # Usar set() en lugar de add()
+                    # 3. Asignar todas las categorías al asesor
+                    todas_categorias = Categoria.objects.all()
+                    perfil.categorias.set(todas_categorias)
                 
-                messages.success(request, f'Asesor {user.get_full_name()} creado exitosamente.')
+                messages.success(request, f'Asesor {user.get_full_name()} creado exitosamente con acceso a todas las comisiones.')
                 
             except Exception as e:
                 messages.error(request, f'Error al crear el asesor: {str(e)}')
@@ -81,13 +80,12 @@ def editar_asesor(request, pk):
             asesor.email = request.POST.get('email')
             asesor.save()
             
-            # Actualizar categorías
-            categorias_ids = request.POST.getlist('categorias')
-            if categorias_ids:
-                perfil = asesor.perfil
-                perfil.categorias.set(categorias_ids)
+            # Asignar todas las categorías al asesor
+            todas_categorias = Categoria.objects.all()
+            perfil = asesor.perfil
+            perfil.categorias.set(todas_categorias)
             
-            messages.success(request, 'Asesor actualizado exitosamente.')
+            messages.success(request, 'Asesor actualizado exitosamente con acceso a todas las comisiones.')
         except Exception as e:
             messages.error(request, f'Error al actualizar el asesor: {str(e)}')
     
@@ -251,4 +249,26 @@ def reactivar_asesor(request, pk):
             messages.success(request, 'Asesor reactivado exitosamente.')
         except Exception as e:
             messages.error(request, f'Error al reactivar el asesor: {str(e)}')
+    return redirect('usuario:gestion')
+
+@login_required
+@user_passes_test(es_diputada)
+def asignar_todas_categorias(request):
+    """Asigna todas las categorías a todos los asesores."""
+    if request.method == 'POST':
+        try:
+            # Obtener todas las categorías
+            categorias = Categoria.objects.all()
+            
+            # Obtener todos los perfiles de asesores
+            perfiles_asesores = Perfil.objects.filter(es_diputada=False)
+            
+            # Asignar todas las categorías a cada asesor
+            for perfil in perfiles_asesores:
+                perfil.categorias.set(categorias)
+            
+            messages.success(request, 'Se han asignado todas las categorías a todos los asesores exitosamente.')
+        except Exception as e:
+            messages.error(request, f'Error al asignar categorías: {str(e)}')
+    
     return redirect('usuario:gestion')

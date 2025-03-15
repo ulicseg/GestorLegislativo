@@ -34,10 +34,8 @@ class Proyecto(models.Model):
         return f"{self.get_tipo_display()} {self.numero} {self.titulo}"
 
     def save(self, *args, **kwargs):
-        if not self.pk:  # Solo validar al crear un nuevo proyecto
-            # Si es asesor, validar que tenga permiso para crear proyectos en esta categoría
-            if not self.creado_por.perfil.es_diputada and self.categoria not in self.creado_por.perfil.categorias.all():
-                raise ValidationError('No tienes permiso para crear proyectos en esta categoría.')
+        # Eliminar validación de permisos por categoría
+        # Todos los asesores pueden crear proyectos en cualquier categoría
         super().save(*args, **kwargs)
 
     def clean(self):

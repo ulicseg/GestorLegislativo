@@ -17,4 +17,5 @@ urlpatterns = [
     path('gestion/categoria/<int:pk>/eliminar/', views.eliminar_categoria, name='eliminar_categoria'),
     path('cambiar-password/', views.cambiar_password, name='cambiar_password'),
     path('gestion/diputada/crear/', views.crear_diputada, name='crear_diputada'),
+    path('gestion/asignar-todas-categorias/', views.asignar_todas_categorias, name='asignar_todas_categorias'),
 ]

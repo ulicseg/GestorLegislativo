@@ -9,16 +9,10 @@ class AsesorCreationForm(UserCreationForm):
     first_name = forms.CharField(required=True)
     last_name = forms.CharField(required=True)
     email = forms.EmailField(required=True)
-    categorias = forms.ModelMultipleChoiceField(
-        queryset=Categoria.objects.all(),
-        required=True,
-        widget=forms.CheckboxSelectMultiple,
-        help_text='Seleccione las categorías a las que pertenecerá el asesor'
-    )
 
     class Meta:
         model = User
-        fields = ('username', 'first_name', 'last_name', 'email', 'password1', 'password2', 'categorias')
+        fields = ('username', 'first_name', 'last_name', 'email', 'password1', 'password2')
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
