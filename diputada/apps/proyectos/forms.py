@@ -5,9 +5,17 @@ from ckeditor_uploader.widgets import CKEditorUploadingWidget
 from django.core.exceptions import ValidationError
 
 class ProyectoForm(forms.ModelForm):
+    # Añadir campo para seleccionar comisiones de la ruta
+    comisiones_ruta = forms.ModelMultipleChoiceField(
+        queryset=Categoria.objects.all(),
+        required=False,
+        widget=forms.CheckboxSelectMultiple,
+        help_text='Seleccione las comisiones por las que debe pasar este proyecto'
+    )
+    
     class Meta:
         model = Proyecto
-        fields = ['numero', 'tipo', 'titulo', 'descripcion', 'categoria']
+        fields = ['numero', 'tipo', 'titulo', 'descripcion', 'categoria', 'comisiones_ruta']
         widgets = {
             'numero': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Ej: 2323/23'}),
             'tipo': forms.Select(attrs={'class': 'form-control'}),
@@ -18,10 +26,15 @@ class ProyectoForm(forms.ModelForm):
 
     def __init__(self, *args, **kwargs):
         user = kwargs.pop('user', None)
+        instance = kwargs.get('instance', None)
         super().__init__(*args, **kwargs)
         
         # Mostrar todas las categorías a todos los usuarios
         self.fields['categoria'].queryset = Categoria.objects.all()
+        
+        # Si estamos editando un proyecto existente, preseleccionar las comisiones de su ruta
+        if instance:
+            self.fields['comisiones_ruta'].initial = instance.ruta_comisiones.all().values_list('comision', flat=True)
     
     def clean_numero(self):
         numero = self.cleaned_data.get('numero')

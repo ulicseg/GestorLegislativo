@@ -113,3 +113,25 @@ class ProyectoTemario(models.Model):
         for pt in proyectos_posteriores:
             pt.orden -= 1
             pt.save()
+
+class RutaComision(models.Model):
+    ESTADO_CHOICES = [
+        ('pendiente', 'Pendiente'),
+        ('tratandose', 'En tratamiento'),
+        ('aprobado', 'Aprobado'),
+        ('desaprobado', 'Desaprobado'),
+    ]
+    
+    proyecto = models.ForeignKey(Proyecto, on_delete=models.CASCADE, related_name='ruta_comisiones')
+    comision = models.ForeignKey(Categoria, on_delete=models.CASCADE)
+    orden = models.PositiveIntegerField(default=1)
+    estado = models.CharField(max_length=20, choices=ESTADO_CHOICES, default='pendiente')
+    
+    class Meta:
+        ordering = ['orden']
+        unique_together = ['proyecto', 'comision']
+        verbose_name = 'Ruta de Comisión'
+        verbose_name_plural = 'Rutas de Comisiones'
+    
+    def __str__(self):
+        return f"{self.comision.nombre} - {self.get_estado_display()}"

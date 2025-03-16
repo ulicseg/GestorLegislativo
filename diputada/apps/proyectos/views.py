@@ -1,7 +1,7 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required, user_passes_test
 from django.contrib import messages
-from .models import Proyecto, Actualizacion, Temario, ProyectoTemario, Categoria
+from .models import Proyecto, Actualizacion, Temario, ProyectoTemario, Categoria, RutaComision
 from .forms import ProyectoForm, ActualizacionForm, ProyectoFilterForm, TemarioForm, TemarioFilterForm
 from django.core.paginator import Paginator
 from django.db.models import Q, F
@@ -102,6 +102,36 @@ def crear_proyecto(request):
             proyecto = form.save(commit=False)
             proyecto.creado_por = request.user
             proyecto.save()
+            
+            # Verificar si se proporcionó un orden personalizado
+            comisiones_orden = request.POST.get('comisiones_orden', '')
+            if comisiones_orden:
+                # Usar el orden personalizado
+                comisiones_ids = comisiones_orden.split(',')
+                
+                # Crear las rutas para las comisiones seleccionadas en el orden especificado
+                for i, comision_id in enumerate(comisiones_ids, start=1):
+                    try:
+                        comision = Categoria.objects.get(id=comision_id)
+                        RutaComision.objects.create(
+                            proyecto=proyecto,
+                            comision=comision,
+                            orden=i,
+                            estado='pendiente'
+                        )
+                    except Categoria.DoesNotExist:
+                        continue
+            else:
+                # Usar el método anterior si no hay orden personalizado
+                comisiones_ruta = form.cleaned_data.get('comisiones_ruta', [])
+                for i, comision in enumerate(comisiones_ruta, start=1):
+                    RutaComision.objects.create(
+                        proyecto=proyecto,
+                        comision=comision,
+                        orden=i,
+                        estado='pendiente'
+                    )
+            
             messages.success(request, 'Proyecto creado exitosamente.')
             return redirect('proyectos:detalle_proyecto', pk=proyecto.pk)
     else:
@@ -125,6 +155,9 @@ def detalle_proyecto(request, pk):
     # Agregar el formulario de actualización
     form = ActualizacionForm()
     
+    # Obtener la ruta de comisiones del proyecto
+    ruta_comisiones = proyecto.ruta_comisiones.all().order_by('orden')
+    
     context = {
         'proyecto': proyecto,
         'actualizaciones': actualizaciones,
@@ -132,6 +165,7 @@ def detalle_proyecto(request, pk):
         'puede_actualizar': puede_actualizar,
         'form': form,
         'from_mis_proyectos': from_mis_proyectos,
+        'ruta_comisiones': ruta_comisiones,
     }
     
     return render(request, 'proyectos/detalle_proyecto.html', context)
@@ -148,6 +182,43 @@ def editar_proyecto(request, pk):
         form = ProyectoForm(request.POST, instance=proyecto)
         if form.is_valid():
             form.save()
+            
+            # Procesar las comisiones de la ruta
+            comisiones_ruta = form.cleaned_data.get('comisiones_ruta', [])
+            
+            # Verificar si se proporcionó un orden personalizado
+            comisiones_orden = request.POST.get('comisiones_orden', '')
+            if comisiones_orden:
+                # Usar el orden personalizado
+                comisiones_ids = comisiones_orden.split(',')
+                
+                # Eliminar las rutas existentes que no están en la nueva selección
+                RutaComision.objects.filter(proyecto=proyecto).exclude(comision__id__in=comisiones_ids).delete()
+                
+                # Actualizar o crear las rutas para las comisiones seleccionadas en el orden especificado
+                for i, comision_id in enumerate(comisiones_ids, start=1):
+                    try:
+                        comision = Categoria.objects.get(id=comision_id)
+                        RutaComision.objects.update_or_create(
+                            proyecto=proyecto,
+                            comision=comision,
+                            defaults={'orden': i}
+                        )
+                    except Categoria.DoesNotExist:
+                        continue
+            else:
+                # Usar el método anterior si no hay orden personalizado
+                # Eliminar las rutas existentes que no están en la nueva selección
+                RutaComision.objects.filter(proyecto=proyecto).exclude(comision__in=comisiones_ruta).delete()
+                
+                # Actualizar o crear las rutas para las comisiones seleccionadas
+                for i, comision in enumerate(comisiones_ruta, start=1):
+                    RutaComision.objects.update_or_create(
+                        proyecto=proyecto,
+                        comision=comision,
+                        defaults={'orden': i}
+                    )
+            
             messages.success(request, 'Proyecto actualizado exitosamente.')
             return redirect(f"{reverse('proyectos:detalle_proyecto', args=[proyecto.pk])}{'?from=mis_proyectos' if from_mis_proyectos else ''}")
     else:
@@ -492,6 +563,33 @@ def descargar_temario_pdf(request, pk):
         rightIndent=25,
         leading=10
     )
+    
+    # Estilo para la sección de ruta de comisiones
+    route_title_style = ParagraphStyle(
+        'RouteTitle',
+        parent=styles['Normal'],
+        fontSize=12,
+        fontName='Helvetica-Bold',
+        textColor=colors.black,
+        spaceBefore=12,
+        spaceAfter=6,
+        leftIndent=20,
+        leading=14
+    )
+    
+    route_item_style = ParagraphStyle(
+        'RouteItem',
+        parent=styles['Normal'],
+        fontSize=10,
+        leading=14,
+        leftIndent=30,
+        rightIndent=30,
+        spaceBefore=3,
+        spaceAfter=3,
+        textColor=colors.black,
+        backColor=colors.Color(0.97, 0.97, 0.97),
+        borderPadding=5
+    )
 
     # Convertir fecha a español
     meses = ['enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio', 'julio',
@@ -511,19 +609,50 @@ def descargar_temario_pdf(request, pk):
     # Proyectos
     for i, pt in enumerate(temario.proyectotemario_set.all().select_related(
         'proyecto', 'proyecto__categoria', 'proyecto__creado_por'
-    ).prefetch_related('proyecto__actualizaciones', 'proyecto__actualizaciones__autor')):
+    ).prefetch_related(
+        'proyecto__actualizaciones', 
+        'proyecto__actualizaciones__autor',
+        'proyecto__ruta_comisiones',
+        'proyecto__ruta_comisiones__comision'
+    )):
         
         # Título del proyecto con su número de orden y comisión al lado
         categoria_nombre = pt.proyecto.categoria.nombre.lower().capitalize()
         
         elements.append(Paragraph(
-            f"<u>{pt.orden}. {pt.proyecto.titulo}</u> <i><font color='gray'> - {categoria_nombre}</font></i>",
+            f"<u>{pt.orden}. {pt.proyecto.get_tipo_display()} {pt.proyecto.numero} - {pt.proyecto.titulo}</u> <i><font color='gray'> - {categoria_nombre}</font></i>",
             heading_style
         ))
         
         # Descripción del proyecto (limpiada)
         descripcion_limpia = limpiar_html(pt.proyecto.descripcion)
         elements.append(Paragraph(descripcion_limpia, content_style))
+        
+        # Ruta de comisiones
+        rutas = pt.proyecto.ruta_comisiones.all().order_by('orden')
+        if rutas.exists():
+            elements.append(Paragraph("Ruta de comisiones:", route_title_style))
+            elements.append(Spacer(1, 5))
+            
+            for i, ruta in enumerate(rutas, 1):
+                estado_texto = ruta.get_estado_display()
+                color_estado = ""
+                
+                if ruta.estado == 'aprobado':
+                    color_estado = "green"
+                elif ruta.estado == 'tratandose':
+                    color_estado = "orange"
+                elif ruta.estado == 'desaprobado':
+                    color_estado = "red"
+                else:
+                    color_estado = "gray"
+                
+                elements.append(Paragraph(
+                    f'<b>{i}.</b> {ruta.comision.nombre} - <font color="{color_estado}">{estado_texto}</font>',
+                    route_item_style
+                ))
+            
+            elements.append(Spacer(1, 10))
         
         if pt.proyecto.actualizaciones.exists():
             elements.append(Paragraph("Historial de Actualizaciones:", heading_style))
@@ -572,3 +701,20 @@ def descargar_temario_pdf(request, pk):
     response['Content-Disposition'] = f'attachment; filename="{filename}"'
     
     return response
+
+@login_required
+def cambiar_estado_comision(request, ruta_id):
+    """Cambia el estado de un proyecto en una comisión específica."""
+    ruta = get_object_or_404(RutaComision, pk=ruta_id)
+    proyecto = ruta.proyecto
+    
+    if request.method == 'POST':
+        nuevo_estado = request.POST.get('estado')
+        if nuevo_estado in dict(RutaComision.ESTADO_CHOICES):
+            ruta.estado = nuevo_estado
+            ruta.save()
+            messages.success(request, f'Estado actualizado a {ruta.get_estado_display()} para la comisión {ruta.comision.nombre}.')
+        else:
+            messages.error(request, 'Estado no válido.')
+    
+    return redirect('proyectos:detalle_proyecto', pk=proyecto.pk)

@@ -18,6 +18,7 @@ urlpatterns = [
     path('temarios/<int:pk>/eliminar/', views.eliminar_temario, name='eliminar_temario'),
     path('temarios/<int:pk>/pdf/', views.descargar_temario_pdf, name='descargar_temario_pdf'),
     path('mis-proyectos/', views.mis_proyectos, name='mis_proyectos'),
+    path('ruta-comision/<int:ruta_id>/cambiar-estado/', views.cambiar_estado_comision, name='cambiar_estado_comision'),
     # Removemos las rutas que no estamos usando por ahora
     # path('actualizacion/<int:pk>/editar/', views.editar_actualizacion, name='editar_actualizacion'),
     # path('actualizacion/<int:pk>/eliminar/', views.eliminar_actualizacion, name='eliminar_actualizacion'),

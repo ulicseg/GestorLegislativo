@@ -55,6 +55,144 @@
         </div>
     </div>
 
+    <!-- Ruta de Comisiones -->
+    <div class="card shadow-sm mt-4">
+        <div class="card-header">
+            <h5 class="mb-0">
+                <i class="fas fa-route me-2"></i>Ruta de Comisiones
+            </h5>
+        </div>
+        <div class="card-body">
+            {% if ruta_comisiones %}
+                <!-- Indicador de progreso -->
+                <div class="progress-indicator mb-3">
+                    <h6 class="text-muted mb-2">Estado de avance del proyecto</h6>
+                    <div class="progress" style="height: 12px;">
+                        {% with total_comisiones=ruta_comisiones.count %}
+                            {% for ruta in ruta_comisiones %}
+                                {% if ruta.estado == 'aprobado' %}
+                                    <div class="progress-bar bg-success" role="progressbar" 
+                                         style="width: calc(100% / {{ total_comisiones }});" 
+                                         aria-valuenow="1" 
+                                         aria-valuemin="0" 
+                                         aria-valuemax="{{ total_comisiones }}">
+                                    </div>
+                                {% elif ruta.estado == 'tratandose' %}
+                                    <div class="progress-bar bg-warning" role="progressbar" 
+                                         style="width: calc(100% / {{ total_comisiones }} / 2);" 
+                                         aria-valuenow="0.5" 
+                                         aria-valuemin="0" 
+                                         aria-valuemax="{{ total_comisiones }}">
+                                    </div>
+                                {% else %}
+                                    <div class="progress-bar bg-secondary" role="progressbar" 
+                                         style="width: 0;" 
+                                         aria-valuenow="0" 
+                                         aria-valuemin="0" 
+                                         aria-valuemax="{{ total_comisiones }}">
+                                    </div>
+                                {% endif %}
+                            {% endfor %}
+                        {% endwith %}
+                    </div>
+                    <div class="d-flex justify-content-between mt-1">
+                        <small class="text-muted">Inicio</small>
+                        <small class="text-muted">Fin</small>
+                    </div>
+                </div>
+
+                <div class="ruta-comisiones-container">
+                    <div class="ruta-comisiones-timeline">
+                        {% for ruta in ruta_comisiones %}
+                            <div class="ruta-step {% if forloop.last %}last-step{% endif %} estado-{{ ruta.estado }}">
+                                <div class="ruta-step-content">
+                                    <div class="ruta-step-number">{{ ruta.orden }}</div>
+                                    <div class="ruta-step-info">
+                                        <h6 class="mb-1">{{ ruta.comision.nombre }}</h6>
+                                        {% if ruta.estado == 'pendiente' %}
+                                            <span class="badge bg-secondary">{{ ruta.get_estado_display }}</span>
+                                        {% elif ruta.estado == 'tratandose' %}
+                                            <span class="badge bg-warning">{{ ruta.get_estado_display }}</span>
+                                        {% elif ruta.estado == 'aprobado' %}
+                                            <span class="badge bg-success">{{ ruta.get_estado_display }}</span>
+                                        {% elif ruta.estado == 'desaprobado' %}
+                                            <span class="badge bg-danger">{{ ruta.get_estado_display }}</span>
+                                        {% endif %}
+                                        <div class="mt-2">
+                                            <!-- Botones de estado horizontales -->
+                                            <div class="btn-group btn-group-sm estado-botones">
+                                                <form method="post" action="{% url 'proyectos:cambiar_estado_comision' ruta.id %}" class="d-inline">
+                                                    {% csrf_token %}
+                                                    <input type="hidden" name="estado" value="pendiente">
+                                                    <button type="submit" class="btn btn-outline-secondary btn-sm estado-btn {% if ruta.estado == 'pendiente' %}active{% endif %}" title="Pendiente">
+                                                        <i class="fas fa-clock"></i>
+                                                    </button>
+                                                </form>
+                                                <form method="post" action="{% url 'proyectos:cambiar_estado_comision' ruta.id %}" class="d-inline">
+                                                    {% csrf_token %}
+                                                    <input type="hidden" name="estado" value="tratandose">
+                                                    <button type="submit" class="btn btn-outline-warning btn-sm estado-btn {% if ruta.estado == 'tratandose' %}active{% endif %}" title="En tratamiento">
+                                                        <i class="fas fa-sync-alt"></i>
+                                                    </button>
+                                                </form>
+                                                <form method="post" action="{% url 'proyectos:cambiar_estado_comision' ruta.id %}" class="d-inline">
+                                                    {% csrf_token %}
+                                                    <input type="hidden" name="estado" value="aprobado">
+                                                    <button type="submit" class="btn btn-outline-success btn-sm estado-btn {% if ruta.estado == 'aprobado' %}active{% endif %}" title="Aprobado">
+                                                        <i class="fas fa-check"></i>
+                                                    </button>
+                                                </form>
+                                                <form method="post" action="{% url 'proyectos:cambiar_estado_comision' ruta.id %}" class="d-inline">
+                                                    {% csrf_token %}
+                                                    <input type="hidden" name="estado" value="desaprobado">
+                                                    <button type="submit" class="btn btn-outline-danger btn-sm estado-btn {% if ruta.estado == 'desaprobado' %}active{% endif %}" title="Desaprobado">
+                                                        <i class="fas fa-times"></i>
+                                                    </button>
+                                                </form>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    {% if not forloop.last %}
+                                        <div class="ruta-step-arrow">
+                                            <i class="fas fa-chevron-right"></i>
+                                        </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        {% endfor %}
+                    </div>
+                </div>
+                
+                <!-- Leyenda de estados -->
+                <div class="ruta-leyenda mt-3">
+                    <div class="d-flex flex-wrap justify-content-center gap-3">
+                        <div class="leyenda-item">
+                            <span class="leyenda-color bg-secondary"></span>
+                            <span class="leyenda-texto">Pendiente</span>
+                        </div>
+                        <div class="leyenda-item">
+                            <span class="leyenda-color bg-warning"></span>
+                            <span class="leyenda-texto">En tratamiento</span>
+                        </div>
+                        <div class="leyenda-item">
+                            <span class="leyenda-color bg-success"></span>
+                            <span class="leyenda-texto">Aprobado</span>
+                        </div>
+                        <div class="leyenda-item">
+                            <span class="leyenda-color bg-danger"></span>
+                            <span class="leyenda-texto">Desaprobado</span>
+                        </div>
+                    </div>
+                </div>
+            {% else %}
+                <div class="alert alert-info">
+                    <i class="fas fa-info-circle me-2"></i>
+                    Este proyecto no tiene una ruta de comisiones definida. Puede añadir una ruta de comisiones al editar el proyecto.
+                </div>
+            {% endif %}
+        </div>
+    </div>
+
     <!-- Sección de Actualizaciones -->
     <div class="card shadow-sm mt-4">
         <div class="card-header">
@@ -147,6 +285,279 @@
         border-radius: 6px;
     }
 
+    /* Estilos para la línea de tiempo de la ruta de comisiones */
+    .ruta-comisiones-container {
+        overflow-x: auto;
+        padding: 10px 0;
+        -webkit-overflow-scrolling: touch; /* Para mejor desplazamiento en iOS */
+    }
+    
+    .ruta-comisiones-timeline {
+        display: flex;
+        min-width: 100%;
+        position: relative;
+        padding: 30px 10px 20px;
+    }
+
+    .ruta-comisiones-timeline::before {
+        content: '';
+        position: absolute;
+        top: 60px;
+        left: 40px;
+        right: 40px;
+        height: 4px;
+        background: #e9ecef;
+        z-index: 1;
+    }
+
+    .ruta-step {
+        flex: 1;
+        position: relative;
+        padding: 0 15px;
+        z-index: 2;
+        min-width: 180px;
+        max-width: 250px;
+    }
+
+    .ruta-step-content {
+        background-color: white;
+        border-radius: 8px;
+        box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        padding: 15px;
+        height: 100%;
+        border: 1px solid #e9ecef;
+        transition: all 0.3s ease;
+        position: relative;
+    }
+
+    .ruta-step-content:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+    }
+
+    .ruta-step-number {
+        width: 36px;
+        height: 36px;
+        background-color: #153664;
+        color: white;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: bold;
+        margin: 0 auto 15px auto;
+        border: 3px solid white;
+        box-shadow: 0 0 0 3px #e9ecef;
+        position: relative;
+        z-index: 3;
+    }
+
+    .ruta-step-info {
+        text-align: center;
+    }
+    
+    /* Estilos para los botones de estado */
+    .estado-botones {
+        display: flex;
+        justify-content: center;
+        width: 100%;
+    }
+    
+    .estado-botones form {
+        margin: 0 2px;
+    }
+    
+    .estado-btn {
+        width: 32px;
+        height: 32px;
+        padding: 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 4px !important;
+        transition: all 0.2s ease;
+    }
+    
+    .estado-btn:hover {
+        transform: scale(1.1);
+    }
+    
+    .btn-group-sm .btn {
+        margin: 0 2px;
+        border-radius: 4px !important;
+    }
+    
+    .btn-outline-secondary.active {
+        background-color: #6c757d;
+        color: white;
+    }
+    
+    .btn-outline-warning.active {
+        background-color: #ffc107;
+        color: #212529;
+    }
+    
+    .btn-outline-success.active {
+        background-color: #28a745;
+        color: white;
+    }
+    
+    .btn-outline-danger.active {
+        background-color: #dc3545;
+        color: white;
+    }
+    
+    /* Tooltip personalizado para los botones */
+    [title] {
+        position: relative;
+    }
+    
+    [title]:hover::after {
+        content: attr(title);
+        position: absolute;
+        bottom: 100%;
+        left: 50%;
+        transform: translateX(-50%);
+        background-color: rgba(0,0,0,0.8);
+        color: white;
+        padding: 3px 8px;
+        border-radius: 4px;
+        font-size: 0.7rem;
+        white-space: nowrap;
+        z-index: 10;
+        margin-bottom: 5px;
+    }
+    
+    .ruta-step-arrow {
+        position: absolute;
+        right: -20px;
+        top: 50%;
+        transform: translateY(-50%);
+        color: #6c757d;
+        font-size: 20px;
+        z-index: 3;
+    }
+
+    /* Leyenda de estados */
+    .ruta-leyenda {
+        border-top: 1px solid #e9ecef;
+        padding-top: 15px;
+    }
+    
+    .leyenda-item {
+        display: flex;
+        align-items: center;
+        margin-right: 15px;
+    }
+    
+    .leyenda-color {
+        width: 16px;
+        height: 16px;
+        border-radius: 50%;
+        margin-right: 5px;
+    }
+    
+    .leyenda-texto {
+        font-size: 0.85rem;
+    }
+
+    /* Estados de la ruta */
+    .estado-pendiente .ruta-step-number {
+        background-color: #6c757d;
+    }
+    
+    .estado-tratandose .ruta-step-number {
+        background-color: #ffc107;
+        color: #212529;
+    }
+    
+    .estado-aprobado .ruta-step-number {
+        background-color: #28a745;
+    }
+    
+    .estado-desaprobado .ruta-step-number {
+        background-color: #dc3545;
+    }
+    
+    .estado-aprobado .ruta-step-content {
+        border-color: #28a745;
+        box-shadow: 0 2px 10px rgba(40, 167, 69, 0.2);
+    }
+    
+    .estado-desaprobado .ruta-step-content {
+        border-color: #dc3545;
+        box-shadow: 0 2px 10px rgba(220, 53, 69, 0.2);
+    }
+    
+    .estado-tratandose .ruta-step-content {
+        border-color: #ffc107;
+        box-shadow: 0 2px 10px rgba(255, 193, 7, 0.2);
+    }
+
+    /* Estilos para la barra de progreso */
+    .progress {
+        border-radius: 10px;
+        overflow: hidden;
+        background-color: #f5f5f5;
+        box-shadow: inset 0 1px 2px rgba(0,0,0,0.1);
+    }
+    
+    .progress-bar {
+        transition: width 0.6s ease;
+    }
+
+    .badge.bg-secondary {
+        background-color: #6c757d !important;
+    }
+
+    .badge.bg-warning {
+        background-color: #ffc107 !important;
+        color: #212529;
+    }
+
+    .badge.bg-success {
+        background-color: #28a745 !important;
+    }
+
+    .badge.bg-danger {
+        background-color: #dc3545 !important;
+    }
+
+    /* Responsive adjustments */
+    @media (max-width: 768px) {
+        .ruta-comisiones-timeline {
+            padding: 15px 5px;
+        }
+        
+        .ruta-step {
+            min-width: 150px;
+            padding: 0 10px;
+        }
+        
+        .ruta-step-content {
+            padding: 10px;
+        }
+        
+        .ruta-step-number {
+            width: 30px;
+            height: 30px;
+            font-size: 0.9rem;
+        }
+        
+        .ruta-step-info h6 {
+            font-size: 0.9rem;
+        }
+        
+        .dropdown-menu {
+            min-width: 120px;
+        }
+        
+        .dropdown-item {
+            padding: 0.25rem 0.5rem;
+            font-size: 0.875rem;
+        }
+    }
+
     .timeline {
         position: relative;
         padding-left: 3rem;
@@ -160,26 +571,6 @@
         bottom: 0;
         width: 2px;
         background: #e9ecef;
-    }
-
-    .timeline-item {
-        position: relative;
-        margin-bottom: 1.5rem;
-    }
-
-    .timeline-marker {
-        position: absolute;
-        left: -3rem;
-        width: 1rem;
-        height: 1rem;
-        border-radius: 50%;
-        background: var(--primary-color);
-        border: 2px solid #fff;
-        box-shadow: 0 0 0 2px var(--primary-color);
-    }
-
-    .timeline-content {
-        margin-left: 0.5rem;
     }
 
     .card-header.bg-light {

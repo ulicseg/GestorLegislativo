@@ -64,17 +64,39 @@
         <div class="col-md-6 mb-4">
             <div class="card mb-4 shadow-sm">
                 <div class="card-header">
-                    <h5 class="card-title">
+                    <h5 class="mb-0">
                         {{ proyecto.get_tipo_display }} 
                         <span class="proyecto-numero">{{ proyecto.numero }}</span> 
-                        {{ proyecto.titulo|escape }}
+                        {{ proyecto.titulo }}
                     </h5>
                     <span class="badge" style="background-color: #965a0091;">
-                        {{ proyecto.categoria.nombre|escape }}
+                        {{ proyecto.categoria.nombre|truncatechars:40 }}
                     </span>
                 </div>
                 <div class="card-body">
-                    <p class="card-text">{{ proyecto.descripcion|safe|truncatewords_html:50 }}</p>
+                    <p class="card-text text-muted">{{ proyecto.descripcion|striptags|truncatewords:20 }}</p>
+                    
+                    <!-- Indicador visual de ruta de comisiones -->
+                    {% if proyecto.ruta_comisiones.all %}
+                    <div class="ruta-comisiones-indicador mb-2">
+                        <div class="d-flex align-items-center">
+                            <small class="text-muted me-2">Ruta:</small>
+                            <div class="d-flex">
+                                {% for ruta in proyecto.ruta_comisiones.all|dictsort:"orden" %}
+                                    <div class="ruta-comision-badge" 
+                                         data-bs-toggle="tooltip" 
+                                         data-bs-placement="top" 
+                                         title="{{ ruta.comision.nombre }} - {{ ruta.get_estado_display }}"
+                                         style="background-color: 
+                                            {% if ruta.estado == 'aprobado' %}#28a745{% elif ruta.estado == 'tratandose' %}#ffc107{% elif ruta.estado == 'desaprobado' %}#dc3545{% else %}#6c757d{% endif %};">
+                                        {{ ruta.comision.nombre|truncatechars:8 }}
+                                    </div>
+                                {% endfor %}
+                            </div>
+                        </div>
+                    </div>
+                    {% endif %}
+                    
                     <div class="d-flex justify-content-between align-items-center">
                         <div class="text-muted small">
                             <i class="fas fa-user me-1"></i>{{ proyecto.creado_por.get_full_name }}
@@ -82,11 +104,11 @@
                             <i class="fas fa-calendar me-1"></i>{{ proyecto.fecha_creacion|date:"d/m/Y H:i" }}
                         </div>
                         <div class="btn-group">
-                            <a href="{% url 'proyectos:detalle_proyecto' proyecto.pk %}" class="btn btn-custom-primary btn-sm">
+                            <a href="{% url 'proyectos:detalle_proyecto' proyecto.pk %}" class="btn btn-primary btn-sm">
                                 <i class="fas fa-eye me-1"></i>Ver detalles
                             </a>
                             {% if user.perfil.es_diputada or proyecto.categoria in user.perfil.categorias.all %}
-                                <a href="{% url 'proyectos:editar_proyecto' proyecto.pk %}" class="btn btn-custom-warning btn-sm">
+                                <a href="{% url 'proyectos:editar_proyecto' proyecto.pk %}" class="btn btn-warning btn-sm" style="background-color: #b36b0191; border-color: #000000;">
                                     <i class="fas fa-edit me-1"></i>Editar
                                 </a>
                             {% endif %}
@@ -162,89 +184,58 @@
         display: inline-block;
     }
     
-    /* Estilos para los botones en las cards */
-    .btn-custom {
-        padding: 0.5rem 1rem;
-        border-radius: 6px;
-        transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-        width: 150px;
-        height: 52px;
-        position: relative;
-        overflow: hidden;
-        display: flex;
+    /* Estilos para los indicadores de ruta de comisiones */
+    .ruta-comisiones-indicador {
+        margin-top: 8px;
+    }
+    
+    .ruta-comision-badge {
+        min-width: 50px;
+        max-width: 80px;
+        height: 22px;
+        border-radius: 4px;
+        margin-right: 8px;
+        display: inline-flex;
         align-items: center;
         justify-content: center;
-        border: none;
-        box-shadow: 0 4px 15px rgba(0,0,0,0.1);
-    }
-
-    /* Estilos para el botón primario */
-    .btn-primary.btn-custom {
-        background: linear-gradient(145deg, var(--accent-color), var(--primary-color));
-    }
-
-    /* Estilos para el botón warning (editar) */
-    .btn-warning.btn-custom {
-        background: linear-gradient(145deg, #d68a10, #945e0c);
+        border: 1px solid rgba(0,0,0,0.1);
+        position: relative;
         color: white;
-    }
-
-    .btn-warning.btn-custom::before {
-        background: linear-gradient(145deg, #945e0c, #d68a10);
-    }
-
-    .btn-custom .btn-content {
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        justify-content: center;
-        gap: 6px;
-        position: relative;
-        z-index: 1;
-        transition: all 0.4s ease;
-        width: 100%;
-        padding: 0 0.5rem;
-    }
-
-    .btn-custom i {
-        font-size: 1rem;
-        transition: all 0.4s ease;
-    }
-
-    .btn-custom span {
-        font-weight: 500;
-        font-size: 0.8rem;
-        transition: all 0.4s ease;
+        font-size: 10px;
+        font-weight: bold;
+        padding: 0 6px;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        text-transform: capitalize;
         white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
     }
-
-    .btn-custom::before {
+    
+    .ruta-comision-badge::after {
         content: '';
         position: absolute;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
-        opacity: 0;
-        transition: opacity 0.4s ease;
+        top: 50%;
+        right: -6px;
+        width: 6px;
+        height: 2px;
+        background-color: #aaa;
+        transform: translateY(-50%);
     }
-
-    .btn-custom:hover::before {
-        opacity: 1;
-    }
-
-    .btn-custom:hover {
-        transform: translateY(-4px) scale(1.02);
-        box-shadow: 0 8px 25px rgba(0,0,0,0.15);
-    }
-
-    .btn-custom:hover .btn-content {
-        transform: scale(1.05);
-    }
-
-    .btn-custom:active {
-        transform: translateY(2px);
-        box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+    
+    .ruta-comision-badge:last-child::after {
+        display: none;
     }
 </style>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Inicializar tooltips
+        var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+        var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+            return new bootstrap.Tooltip(tooltipTriggerEl);
+        });
+    });
+</script>
 {% endblock %}

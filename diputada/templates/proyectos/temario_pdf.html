@@ -46,6 +46,45 @@
             font-size: 0.9em;
             margin-bottom: 1em;
         }
+        .ruta-comisiones {
+            margin-bottom: 1em;
+            padding: 0.8em;
+            background-color: #f5f5f5;
+            border-radius: 4px;
+            border-left: 3px solid #ccc;
+        }
+        .ruta-comisiones h4 {
+            margin-top: 0;
+            margin-bottom: 0.5em;
+            font-size: 1em;
+            color: #444;
+        }
+        .comision-badge {
+            display: inline-block;
+            margin-right: 0.7em;
+            margin-bottom: 0.5em;
+            padding: 0.4em 0.7em;
+            border-radius: 3px;
+            font-size: 0.85em;
+            color: white;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.1);
+        }
+        .comision-orden {
+            display: inline-block;
+            background-color: white;
+            color: #333;
+            border-radius: 50%;
+            width: 1.4em;
+            height: 1.4em;
+            text-align: center;
+            font-size: 0.8em;
+            margin-right: 0.4em;
+            font-weight: bold;
+        }
+        .estado-pendiente { background-color: #6c757d; }
+        .estado-tratandose { background-color: #ffc107; color: #212529; }
+        .estado-aprobado { background-color: #28a745; }
+        .estado-desaprobado { background-color: #dc3545; }
     </style>
 </head>
 <body>
@@ -65,6 +104,17 @@
         <div class="proyecto-descripcion">
             {{ pt.proyecto.descripcion|safe }}
         </div>
+        {% if pt.proyecto.ruta_comisiones.all %}
+        <div class="ruta-comisiones">
+            <h4>Ruta de comisiones:</h4>
+            {% for ruta in pt.proyecto.ruta_comisiones.all|dictsort:"orden" %}
+            <div class="comision-badge estado-{{ ruta.estado }}">
+                <span class="comision-orden">{{ forloop.counter }}</span>
+                {{ ruta.comision.nombre }} ({{ ruta.get_estado_display }})
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
         <div class="actualizaciones">
             <h4>Últimas actualizaciones:</h4>
             {% for actualizacion in pt.proyecto.actualizaciones.all %}
