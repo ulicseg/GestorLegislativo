@@ -1,3 +1,8 @@
+# Environment variables
+.env
+.env.local
+.env.*.local
+
 # Python
 __pycache__/
 *.py[cod]
@@ -19,6 +24,18 @@ var/
 *.egg-info/
 .installed.cfg
 *.egg
+.pytest_cache/
+.coverage
+htmlcov/
+.tox/
+.nox/
+.coverage.*
+.cache
+nosetests.xml
+coverage.xml
+*.cover
+*.py,cover
+.hypothesis/
 
 # Django
 *.log
@@ -26,30 +43,86 @@ local_settings.py
 db.sqlite3
 db.sqlite3-journal
 media/
+staticfiles/
 static/
+*.pot
+*.pyc
+*.mo
+*.db
+*.sqlite3
+*.sqlite3-journal
+*.sqlite3-shm
+*.sqlite3-wal
 
 # Entorno virtual
 venv/
 ENV/
+env/
+.venv/
+.env/
+.ENV/
 
 # IDEs
 .idea/
 .vscode/
 *.swp
 *.swo
+*.swn
+*.bak
+*.tmp
+*.temp
+.project
+.pydevproject
+.settings/
+*.sublime-workspace
+*.sublime-project
 
 # Sistema operativo
 .DS_Store
 Thumbs.db
-
-
-# Environment
-.env
-env/
+desktop.ini
+$RECYCLE.BIN/
+*.lnk
 
 # Migrations
-*/migrations/*
+*/migrations/*.py
+!*/migrations/__init__.py
 
-# Python
-*.pyc
-__pycache__/
+# Archivos de respaldo
+*.bak
+*.backup
+*~
+
+# Archivos de logs
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Archivos de caché
+.cache/
+.pytest_cache/
+.coverage
+htmlcov/
+.tox/
+.nox/
+.coverage.*
+.cache
+nosetests.xml
+coverage.xml
+*.cover
+*.py,cover
+.hypothesis/
+
+# Archivos de configuración local
+local_settings.py
+instance/
+.webassets-cache
+
+# Archivos de base de datos
+*.db
+*.sqlite3
+*.sqlite3-journal
+*.sqlite3-shm
+*.sqlite3-wal
