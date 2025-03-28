@@ -443,14 +443,22 @@ def detalle_temario(request, pk):
     })
 
 @login_required
-@user_passes_test(lambda u: u.perfil.es_diputada)
 def eliminar_temario(request, pk):
     temario = get_object_or_404(Temario, pk=pk)
-    if request.method == 'POST':
-        temario.delete()
-        messages.success(request, 'Temario eliminado exitosamente.')
+    
+    # Verificar que el usuario sea diputada o asesor de la comisión del temario
+    if request.user.perfil.es_diputada or (
+        not request.user.perfil.es_diputada and 
+        temario.comision in request.user.perfil.categorias.all()
+    ):
+        if request.method == 'POST':
+            temario.delete()
+            messages.success(request, 'Temario eliminado exitosamente.')
+        else:
+            messages.error(request, 'Método no permitido.')
     else:
         messages.error(request, 'No tienes permiso para eliminar este temario.')
+    
     return redirect('proyectos:listar_temarios')
 
 @login_required

@@ -7,9 +7,14 @@
     <h4 class="mb-0">
         <i class="fas fa-list-alt me-2"></i>Temarios
     </h4>
-    <a href="{% url 'proyectos:crear_temario' %}" class="btn btn-custom-primary">
-        <i class="fas fa-plus me-2"></i>Nuevo Temario
-    </a>
+    <div class="d-flex gap-2">
+        <button class="btn btn-outline-primary" id="toggleAllTemarios">
+            <i class="fas fa-compress-alt"></i> Contraer Todos
+        </button>
+        <a href="{% url 'proyectos:crear_temario' %}" class="btn btn-custom-primary">
+            <i class="fas fa-plus me-2"></i>Nuevo Temario
+        </a>
+    </div>
 </div>
 
 <!-- Filtros -->
@@ -47,16 +52,38 @@
             <div class="card shadow-sm">
                 <div class="card-header bg-light">
                     <div class="d-flex justify-content-between align-items-center">
-                        <h5 class="mb-0">Temario #{{ temario.numero }}</h5>
-                        <span class="badge" style="background-color: #965a0091 !important;">
-                            {{ temario.comision.nombre|truncatechars:40 }}
-                        </span>
+                        <div class="d-flex align-items-center gap-3">
+                            <i class="fas fa-chevron-right toggle-icon"></i>
+                            <div>
+                                <h5 class="mb-0">Temario #{{ temario.numero }}</h5>
+                                <span class="badge" style="background-color: #965a0091 !important;">
+                                    {{ temario.comision.nombre|truncatechars:40 }}
+                                </span>
+                            </div>
+                        </div>
+                        <div class="d-flex gap-2">
+                            <a href="{% url 'proyectos:detalle_temario' temario.pk %}" 
+                               class="btn btn-custom-primary btn-sm">
+                                <i class="fas fa-eye"></i>
+                            </a>
+                            <a href="{% url 'proyectos:editar_temario' temario.pk %}" 
+                               class="btn btn-custom-warning btn-sm">
+                                <i class="fas fa-edit"></i>
+                            </a>
+                            <button class="btn btn-custom-danger btn-sm" 
+                                    data-bs-toggle="modal" 
+                                    data-bs-target="#eliminarTemario{{ temario.pk }}">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </div>
                     </div>
                 </div>
-                <div class="card-body">
-                    <div class="small text-muted mb-3">
-                        <i class="fas fa-calendar me-1"></i>
-                        Creado el {{ temario.fecha_creacion|date:"d/m/Y" }}
+                <div class="card-body temario-content">
+                    <div class="d-flex justify-content-end mb-3">
+                        <div class="small text-muted">
+                            <i class="fas fa-calendar me-1"></i>
+                            Creado el {{ temario.fecha_creacion|date:"d/m/Y" }}
+                        </div>
                     </div>
                     
                     <h6 class="mb-3">Proyectos incluidos:</h6>
@@ -77,25 +104,6 @@
                             </li>
                         {% endfor %}
                     </ul>
-                </div>
-                <div class="card-footer bg-light">
-                    <div class="btn-group w-100">
-                        <a href="{% url 'proyectos:detalle_temario' temario.pk %}" 
-                           class="btn btn-custom-primary btn-sm">
-                            <i class="fas fa-eye me-1"></i>Ver detalles
-                        </a>
-                        <a href="{% url 'proyectos:editar_temario' temario.pk %}" 
-                           class="btn btn-custom-warning btn-sm">
-                            <i class="fas fa-edit me-1"></i>Editar
-                        </a>
-                        {% if user.perfil.es_diputada %}
-                            <button class="btn btn-custom-danger btn-sm" 
-                                    data-bs-toggle="modal" 
-                                    data-bs-target="#eliminarTemario{{ temario.pk }}">
-                                <i class="fas fa-trash me-1"></i>Eliminar
-                            </button>
-                        {% endif %}
-                    </div>
                 </div>
             </div>
         </div>
@@ -143,5 +151,71 @@
         font-weight: bold;
         display: inline-block;
     }
+
+    .card-header {
+        cursor: pointer;
+    }
+
+    .toggle-icon {
+        transition: transform 0.3s ease;
+    }
+
+    .card.collapsed .toggle-icon {
+        transform: rotate(90deg);
+    }
+
+    .card.collapsed .temario-content {
+        display: none;
+    }
+
+    #toggleAllTemarios i {
+        transition: transform 0.3s ease;
+    }
+
+    #toggleAllTemarios.collapsed i {
+        transform: rotate(180deg);
+    }
 </style>
+
+<script>
+// Función para contraer todos los temarios al cargar la página
+document.addEventListener('DOMContentLoaded', function() {
+    const cards = document.querySelectorAll('.card');
+    cards.forEach(card => {
+        card.classList.add('collapsed');
+    });
+    
+    // Actualizar el texto del botón
+    const toggleButton = document.getElementById('toggleAllTemarios');
+    toggleButton.innerHTML = '<i class="fas fa-expand-alt"></i> Expandir Todos';
+    toggleButton.classList.add('collapsed');
+});
+
+// Función para contraer/expandir un temario individual
+document.querySelectorAll('.card-header').forEach(header => {
+    header.addEventListener('click', function() {
+        const card = this.closest('.card');
+        card.classList.toggle('collapsed');
+    });
+});
+
+// Función para contraer/expandir todos los temarios
+document.getElementById('toggleAllTemarios').addEventListener('click', function() {
+    const cards = document.querySelectorAll('.card');
+    const isCollapsing = !this.classList.contains('collapsed');
+    
+    cards.forEach(card => {
+        if (isCollapsing) {
+            card.classList.add('collapsed');
+        } else {
+            card.classList.remove('collapsed');
+        }
+    });
+    
+    this.classList.toggle('collapsed');
+    this.innerHTML = isCollapsing ? 
+        '<i class="fas fa-expand-alt"></i> Expandir Todos' : 
+        '<i class="fas fa-compress-alt"></i> Contraer Todos';
+});
+</script>
 {% endblock %}

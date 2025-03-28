@@ -3,132 +3,248 @@
 {% block title %}Temario #{{ temario.numero }}{% endblock %}
 
 {% block content %}
-<div class="card shadow-sm">
-    <div class="card-header" style="background-color: #dddddd;">
-        <div class="d-flex justify-content-between align-items-center">
-            <div class="d-flex align-items-center">
-                <h4 class="mb-0">
-                    <strong style="color: #153664;">Temario #{{ temario.numero }}</strong>
-                </h4>
-                <span class="badge ms-2" style="background-color: #965a0091 !important; font-size: 0.75rem;">
-                    {{ temario.comision.nombre }}
-                </span>
+<div class="temario-container">
+    <!-- Encabezado del Temario -->
+    <div class="temario-header">
+        <div class="temario-title">
+            <h2>
+                <span class="temario-number">#{{ temario.numero }}</span>
+                <span class="temario-comision">{{ temario.comision.nombre }}</span>
+            </h2>
+            <div class="temario-meta">
+                <span><i class="fas fa-calendar"></i> {{ temario.fecha_creacion|date:"d/m/Y" }}</span>
+                <span><i class="fas fa-user"></i> {{ temario.creado_por.get_full_name }}</span>
             </div>
-            <div class="btn-group">
-                <a href="{% url 'proyectos:editar_temario' temario.pk %}" 
-                   class="btn btn-custom-warning btn-sm">
-                    <i class="fas fa-edit me-1"></i>Editar
-                </a>
-                <a href="{% url 'proyectos:descargar_temario_pdf' temario.pk %}" 
-                   class="btn btn-petroleo btn-sm">
-                    <i class="fas fa-file-pdf me-1"></i>Descargar PDF
-                </a>
-                {% if user.perfil.es_diputada %}
-                    <button class="btn btn-custom-danger btn-sm" 
-                            data-bs-toggle="modal" 
-                            data-bs-target="#eliminarTemario">
-                        <i class="fas fa-trash me-1"></i>Eliminar
-                    </button>
-                {% endif %}
-                <a href="{% url 'proyectos:listar_temarios' %}" 
-                   class="btn btn-custom-primary btn-sm">
-                    <i class="fas fa-arrow-left me-1"></i>Volver
-                </a>
-            </div>
+        </div>
+        <div class="temario-actions">
+            <a href="{% url 'proyectos:editar_temario' temario.pk %}" class="btn btn-warning">
+                <i class="fas fa-edit"></i> Editar
+            </a>
+            <a href="{% url 'proyectos:descargar_temario_pdf' temario.pk %}" class="btn btn-info">
+                <i class="fas fa-file-pdf"></i> PDF
+            </a>
+            {% if user.perfil.es_diputada %}
+            <button class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#eliminarTemario">
+                <i class="fas fa-trash"></i> Eliminar
+            </button>
+            {% endif %}
+            <a href="{% url 'proyectos:listar_temarios' %}" class="btn btn-primary">
+                <i class="fas fa-arrow-left"></i> Volver
+            </a>
         </div>
     </div>
-    
-    <div class="card-body" style="background-color: #e2e2e2;">
-        <div class="d-flex align-items-center text-muted mb-4">
-            <div class="me-3">
-                <i class="fas fa-calendar me-1"></i>
-                Creado el {{ temario.fecha_creacion|date:"d/m/Y" }}
-            </div>
-            <div>
-                <i class="fas fa-user me-1"></i>
-                Creado por {{ temario.creado_por.get_full_name }}
-            </div>
+
+    <!-- Proyectos -->
+    <div class="proyectos-section">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <h4 class="section-title">
+                <i class="fas fa-file-alt"></i> Proyectos
+            </h4>
+            <button class="btn btn-outline-primary btn-sm" id="toggleAllProyectos">
+                <i class="fas fa-compress-alt"></i> Contraer Todos
+            </button>
         </div>
-        
-        <h5 class="mb-3">
-            <i class="fas fa-file-alt me-2"></i>Proyectos incluidos:
-        </h5>
+
         {% for pt in proyectos_temario %}
-            <div class="card mb-3 shadow-sm" style="background-color: white;">
-                <div class="card-header" style="background-color: #d1d1d1;">
-                    <div class="d-flex justify-content-between align-items-center">
-                        <h6 class="mb-0 d-flex align-items-center">
-                            <span class="badge bg-primary me-2">{{ pt.orden }}</span>
-                            <a href="{% url 'proyectos:detalle_proyecto' pt.proyecto.pk %}" 
-                               class="text-primary text-decoration-none">
-                                {{ pt.proyecto.get_tipo_display }} 
-                                <span class="proyecto-numero">{{ pt.proyecto.numero }}</span> 
-                                {{ pt.proyecto.titulo }}
-                            </a>
-                        </h6>
-                        <span class="badge" style="background-color: #153664;">
-                            {{ pt.proyecto.categoria.nombre }}
-                        </span>
+        <div class="proyecto-card collapsed">
+            <div class="proyecto-header" onclick="toggleProyecto(this)">
+                <div class="d-flex align-items-center">
+                    <i class="fas fa-chevron-right toggle-icon"></i>
+                    <h5 class="mb-0 ms-2">{{ pt.orden }}. {{ pt.proyecto.get_tipo_display }} {{ pt.proyecto.numero }} - {{ pt.proyecto.titulo }}</h5>
+                </div>
+                <div class="proyecto-meta">
+                    <span class="badge bg-secondary">{{ pt.proyecto.categoria.nombre }}</span>
+                </div>
+            </div>
+            <div class="proyecto-content">
+                <!-- Resto del contenido del proyecto -->
+                <div class="proyecto-descripcion">
+                    {{ pt.proyecto.descripcion|safe }}
+                </div>
+
+                <!-- Ruta de Comisiones -->
+                <div class="ruta-section">
+                    <h4 class="ruta-title">
+                        <i class="fas fa-route"></i> Ruta de Comisiones
+                    </h4>
+
+                    <!-- Estado de avance -->
+                    <div class="estado-avance">
+                        <p>Estado de avance del proyecto</p>
+                        <div class="progress">
+                            {% with total_comisiones=pt.proyecto.ruta_comisiones.count %}
+                                {% for ruta in pt.proyecto.ruta_comisiones.all|dictsort:"orden" %}
+                                    {% if ruta.estado == 'aprobado' %}
+                                        <div class="progress-bar bg-success" style="width: calc(100% / {{ total_comisiones }})"></div>
+                                    {% elif ruta.estado == 'tratandose' %}
+                                        <div class="progress-bar bg-primary" style="width: calc(100% / {{ total_comisiones }})"></div>
+                                    {% else %}
+                                        <div class="progress-bar bg-secondary" style="width: calc(100% / {{ total_comisiones }})"></div>
+                                    {% endif %}
+                                {% endfor %}
+                            {% endwith %}
+                        </div>
+                        <div class="progress-labels">
+                            <span>Inicio</span>
+                            <span>Fin</span>
+                        </div>
+                    </div>
+
+                    <!-- Comisiones -->
+                    <div class="comisiones-wrapper">
+                        {% for ruta in pt.proyecto.ruta_comisiones.all|dictsort:"orden" %}
+                        <div class="comision-card">
+                            <div class="comision-header">
+                                <div class="comision-number">{{ ruta.orden }}</div>
+                                <h5>{{ ruta.comision.nombre }}</h5>
+                            </div>
+                            <div class="comision-estado estado-{{ ruta.estado }}">
+                                {{ ruta.get_estado_display }}
+                            </div>
+                            <div class="comision-actions">
+                                <form method="post" action="{% url 'proyectos:cambiar_estado_comision' ruta.id %}" class="d-inline">
+                                    {% csrf_token %}
+                                    <input type="hidden" name="estado" value="pendiente">
+                                    <button type="submit" class="btn-estado {% if ruta.estado == 'pendiente' %}active{% endif %}" 
+                                            title="Pendiente" data-estado="pendiente">
+                                        <i class="fas fa-clock"></i>
+                                    </button>
+                                </form>
+                                <form method="post" action="{% url 'proyectos:cambiar_estado_comision' ruta.id %}" class="d-inline">
+                                    {% csrf_token %}
+                                    <input type="hidden" name="estado" value="tratandose">
+                                    <button type="submit" class="btn-estado {% if ruta.estado == 'tratandose' %}active{% endif %}" 
+                                            title="En Archivo" data-estado="archivo">
+                                        <i class="fas fa-file-archive"></i>
+                                    </button>
+                                </form>
+                                <form method="post" action="{% url 'proyectos:cambiar_estado_comision' ruta.id %}" class="d-inline">
+                                    {% csrf_token %}
+                                    <input type="hidden" name="estado" value="aprobado">
+                                    <button type="submit" class="btn-estado {% if ruta.estado == 'aprobado' %}active{% endif %}" 
+                                            title="Despacho" data-estado="despacho">
+                                        <i class="fas fa-check"></i>
+                                    </button>
+                                </form>
+                                <form method="post" action="{% url 'proyectos:cambiar_estado_comision' ruta.id %}" class="d-inline">
+                                    {% csrf_token %}
+                                    <input type="hidden" name="estado" value="desaprobado">
+                                    <button type="submit" class="btn-estado {% if ruta.estado == 'desaprobado' %}active{% endif %}" 
+                                            title="En Cartera" data-estado="cartera">
+                                        <i class="fas fa-times"></i>
+                                    </button>
+                                </form>
+                            </div>
+                        </div>
+                        {% if not forloop.last %}
+                        <div class="comision-separator">
+                            <i class="fas fa-chevron-right"></i>
+                        </div>
+                        {% endif %}
+                        {% endfor %}
+                    </div>
+
+                    <!-- Leyenda -->
+                    <div class="estados-leyenda">
+                        <div class="leyenda-item">
+                            <span class="leyenda-color bg-secondary"></span>
+                            <span>Pendiente</span>
+                        </div>
+                        <div class="leyenda-item">
+                            <span class="leyenda-color bg-primary"></span>
+                            <span>Archivo</span>
+                        </div>
+                        <div class="leyenda-item">
+                            <span class="leyenda-color bg-success"></span>
+                            <span>Despacho</span>
+                        </div>
+                        <div class="leyenda-item">
+                            <span class="leyenda-color bg-danger"></span>
+                            <span>En cartera</span>
+                        </div>
                     </div>
                 </div>
-                <div class="card-body">
-                    <div class="mb-3">
-                        <div class="border-start border-primary border-3 ps-3 mb-3" style="background-color: #e8e8e8;">
-                            {{ pt.proyecto.descripcion|safe }}
+
+                <!-- Actualizaciones -->
+                <div class="actualizaciones-section">
+                    <h4 class="subsection-title">
+                        <i class="fas fa-history"></i> Actualizaciones
+                    </h4>
+
+                    <!-- Formulario Nueva Actualización -->
+                    <form method="post" action="{% url 'proyectos:crear_actualizacion' pt.proyecto.pk %}" class="actualizacion-form">
+                        {% csrf_token %}
+                        <div class="input-group">
+                            <textarea name="contenido" class="form-control" rows="2" 
+                                      placeholder="Agregar una actualización..." required></textarea>
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-plus"></i>
+                            </button>
                         </div>
-                    </div>
-                    
-                    <!-- Ruta de comisiones -->
-                    {% if pt.proyecto.ruta_comisiones.all %}
-                    <div class="ruta-comision-container">
-                        <h6 class="mb-2">
-                            <i class="fas fa-route me-2"></i>Ruta de comisiones:
-                        </h6>
-                        <div class="d-flex flex-wrap">
-                            {% for ruta in pt.proyecto.ruta_comisiones.all|dictsort:"orden" %}
-                                <div class="ruta-comision-badge estado-{{ ruta.estado }}">
-                                    <div class="ruta-comision-numero">{{ forloop.counter }}</div>
-                                    {{ ruta.comision.nombre }}
-                                    <span class="ms-1 small">({{ ruta.get_estado_display }})</span>
-                                </div>
-                            {% endfor %}
-                        </div>
-                    </div>
-                    {% endif %}
-                    
-                    <div class="actualizaciones-section" style="background-color: #d4d4d4; border-radius: 8px; padding: 1rem;">
-                        <h6 class="mb-3">
-                            <i class="fas fa-history me-2"></i>Últimas actualizaciones:
-                        </h6>
+                    </form>
+
+                    <!-- Lista de Actualizaciones -->
+                    <div class="actualizaciones-list">
                         {% for actualizacion in pt.proyecto.actualizaciones.all %}
-                            <div class="border-start border-secondary ps-3 mb-2" 
-                                 style="background-color: white; padding: 0.8rem; border-radius: 0 8px 8px 0; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">
-                                <div class="small text-muted">
-                                    <i class="fas fa-user-edit me-1"></i>
-                                    {{ actualizacion.autor.get_full_name }} - 
-                                    {{ actualizacion.fecha|date:"d/m/Y H:i" }}
+                        <div class="actualizacion-item">
+                            <div class="actualizacion-meta">
+                                <i class="fas fa-user-edit"></i>
+                                <span>{{ actualizacion.autor.get_full_name }}</span>
+                                <span class="fecha">{{ actualizacion.fecha|date:"d/m/Y H:i" }}</span>
+                                <button class="btn btn-link text-danger btn-sm p-0" 
+                                        data-bs-toggle="modal" data-bs-target="#eliminarActualizacion{{ actualizacion.id }}">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </div>
+                            <div class="actualizacion-contenido">
+                                {{ actualizacion.contenido|safe }}
+                            </div>
+                        </div>
+
+                        <!-- Modal Eliminar Actualización -->
+                        <div class="modal fade" id="eliminarActualizacion{{ actualizacion.id }}" tabindex="-1">
+                            <div class="modal-dialog">
+                                <div class="modal-content">
+                                    <div class="modal-header">
+                                        <h5 class="modal-title">Confirmar Eliminación</h5>
+                                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                                    </div>
+                                    <div class="modal-body">
+                                        <p>¿Estás seguro que deseas eliminar esta actualización?</p>
+                                        <p class="text-danger">Esta acción no se puede deshacer.</p>
+                                    </div>
+                                    <div class="modal-footer">
+                                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                                        <form method="post" action="{% url 'proyectos:eliminar_actualizacion' actualizacion.id %}?next={{ request.path }}">
+                                            {% csrf_token %}
+                                            <button type="submit" class="btn btn-danger">
+                                                <i class="fas fa-trash"></i> Eliminar
+                                            </button>
+                                        </form>
+                                    </div>
                                 </div>
-                                <div>{{ actualizacion.contenido|safe }}</div>
                             </div>
+                        </div>
                         {% empty %}
-                            <div class="text-muted small">
-                                <i class="fas fa-info-circle me-1"></i>
-                                No hay actualizaciones registradas
-                            </div>
+                        <div class="no-actualizaciones">
+                            <i class="fas fa-info-circle"></i>
+                            No hay actualizaciones registradas
+                        </div>
                         {% endfor %}
                     </div>
                 </div>
             </div>
+        </div>
         {% empty %}
-            <div class="alert alert-info">
-                <i class="fas fa-info-circle me-2"></i>
-                No hay proyectos asignados a este temario
-            </div>
+        <div class="no-proyectos">
+            <i class="fas fa-info-circle"></i>
+            No hay proyectos asignados a este temario
+        </div>
         {% endfor %}
     </div>
 </div>
 
-<!-- Modal para confirmar eliminación -->
+<!-- Modal Eliminar -->
 <div class="modal fade" id="eliminarTemario" tabindex="-1">
     <div class="modal-dialog">
         <div class="modal-content">
@@ -138,14 +254,14 @@
             </div>
             <div class="modal-body">
                 <p>¿Estás seguro que deseas eliminar este temario?</p>
-                <p class="text-danger mb-0">Esta acción no se puede deshacer.</p>
+                <p class="text-danger">Esta acción no se puede deshacer.</p>
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
                 <form method="post" action="{% url 'proyectos:eliminar_temario' temario.pk %}">
                     {% csrf_token %}
                     <button type="submit" class="btn btn-danger">
-                        <i class="fas fa-trash me-1"></i>Eliminar
+                        <i class="fas fa-trash"></i> Eliminar
                     </button>
                 </form>
             </div>
@@ -154,57 +270,544 @@
 </div>
 
 <style>
-    .proyecto-numero {
-        background-color: rgba(21, 54, 100, 0.15);
-        color: #153664;
-        padding: 2px 8px;
-        border-radius: 4px;
-        font-weight: bold;
-        display: inline-block;
+/* Estilos Generales */
+.temario-container {
+    width: 100%;
+    max-width: 1600px;
+    margin: 0 auto;
+    padding: 2rem;
+}
+
+/* Encabezado del Temario */
+.temario-header {
+    background: linear-gradient(135deg, #153664 0%, #1a4a8d 100%);
+    color: white;
+    padding: 2rem;
+    border-radius: 10px;
+    margin-bottom: 2rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.temario-title h2 {
+    margin: 0;
+    font-size: 2rem;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.temario-number {
+    background: rgba(255, 255, 255, 0.2);
+    padding: 0.5rem 1rem;
+    border-radius: 8px;
+    font-weight: bold;
+}
+
+.temario-comision {
+    font-size: 1.2rem;
+    opacity: 0.9;
+}
+
+.temario-meta {
+    margin-top: 1rem;
+    display: flex;
+    gap: 2rem;
+    font-size: 0.9rem;
+    opacity: 0.8;
+}
+
+.temario-meta i {
+    margin-right: 0.5rem;
+}
+
+.temario-actions {
+    display: flex;
+    gap: 0.5rem;
+}
+
+.temario-actions .btn {
+    padding: 0.5rem 1rem;
+    border-radius: 6px;
+    border: none;
+    transition: transform 0.2s;
+}
+
+.temario-actions .btn:hover {
+    transform: translateY(-2px);
+}
+
+/* Sección de Proyectos */
+.section-title {
+    color: #153664;
+    font-size: 1.5rem;
+    margin-bottom: 2rem;
+    padding-bottom: 1rem;
+    border-bottom: 2px solid #e9ecef;
+}
+
+.section-title i {
+    margin-right: 0.5rem;
+    color: #5768ff;
+}
+
+/* Tarjeta de Proyecto */
+.proyecto-card {
+    background: white;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+    margin-bottom: 1.5rem;
+    overflow: hidden;
+}
+
+.proyecto-header {
+    padding: 1rem;
+    background: #f8f9fa;
+    cursor: pointer;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    transition: background-color 0.2s;
+}
+
+.proyecto-header:hover {
+    background: #e9ecef;
+}
+
+.proyecto-header h5 {
+    color: #153664;
+    font-size: 1.1rem;
+    margin: 0;
+}
+
+.toggle-icon {
+    transition: transform 0.3s ease;
+}
+
+.proyecto-card.collapsed .toggle-icon {
+    transform: rotate(90deg);
+}
+
+.proyecto-content {
+    padding: 1.5rem;
+    transition: max-height 0.3s ease-out;
+}
+
+.proyecto-card.collapsed .proyecto-content {
+    display: none;
+}
+
+.proyecto-meta {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.proyecto-meta .badge {
+    padding: 0.25rem 0.5rem;
+    border-radius: 4px;
+    font-size: 0.8rem;
+}
+
+/* Descripción del Proyecto */
+.proyecto-descripcion {
+    background: #f8f9fa;
+    padding: 1.5rem;
+    border-radius: 8px;
+    border-left: 4px solid #5768ff;
+    margin-bottom: 2rem;
+}
+
+/* Ruta de Comisiones */
+.ruta-section {
+    background: white;
+    padding: 2rem;
+    border-radius: 10px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+    margin-bottom: 2rem;
+}
+
+.ruta-title {
+    color: #153664;
+    font-size: 1.2rem;
+    margin-bottom: 2rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.ruta-title i {
+    color: #5768ff;
+}
+
+.estado-avance {
+    background: #f8f9fa;
+    padding: 1.5rem;
+    border-radius: 8px;
+    margin-bottom: 2rem;
+}
+
+.estado-avance p {
+    color: #6c757d;
+    margin-bottom: 1rem;
+    font-size: 0.9rem;
+}
+
+.progress {
+    height: 12px;
+    border-radius: 6px;
+    background: #e9ecef;
+    margin-bottom: 0.5rem;
+    display: flex;
+}
+
+.progress-bar {
+    transition: width 0.3s ease;
+}
+
+.progress-labels {
+    display: flex;
+    justify-content: space-between;
+    color: #6c757d;
+    font-size: 0.8rem;
+}
+
+.comisiones-wrapper {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    margin: 2rem 0;
+    overflow-x: auto;
+    padding: 1rem 0;
+}
+
+.comision-card {
+    background: #f8f9fa;
+    border-radius: 8px;
+    padding: 1.5rem;
+    min-width: 300px;
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.comision-header {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.comision-number {
+    width: 30px;
+    height: 30px;
+    background: #6c757d;
+    color: white;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+}
+
+.comision-header h5 {
+    margin: 0;
+    color: #153664;
+    font-size: 1.1rem;
+}
+
+.comision-estado {
+    padding: 0.5rem;
+    border-radius: 6px;
+    text-align: center;
+    font-weight: 500;
+}
+
+.estado-pendiente { background: #6c757d; color: white; }
+.estado-tratandose { background: #0d6efd; color: white; }
+.estado-aprobado { background: #28a745; color: white; }
+.estado-desaprobado { background: #dc3545; color: white; }
+
+.comision-actions {
+    display: flex;
+    gap: 0.5rem;
+    justify-content: center;
+    margin-top: 1rem;
+}
+
+.comision-actions form {
+    margin: 0;
+}
+
+.btn-estado {
+    width: 35px;
+    height: 35px;
+    border: none;
+    border-radius: 4px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-size: 0.9rem;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.btn-estado:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    pointer-events: none;
+}
+
+.btn-estado[data-estado="pendiente"] { 
+    background: #6c757d; 
+    border: 1px solid #5a6268;
+}
+
+.btn-estado[data-estado="archivo"] { 
+    background: #0d6efd;
+    color: white;
+    border: 1px solid #0b5ed7;
+}
+
+.btn-estado[data-estado="despacho"] { 
+    background: #28a745; 
+    border: 1px solid #218838;
+}
+
+.btn-estado[data-estado="cartera"] { 
+    background: #dc3545; 
+    border: 1px solid #c82333;
+}
+
+.btn-estado:hover {
+    transform: translateY(-2px);
+    filter: brightness(110%);
+}
+
+.btn-estado.active {
+    opacity: 0.7;
+    pointer-events: none;
+    box-shadow: inset 0 3px 5px rgba(0,0,0,.125);
+}
+
+.comision-separator {
+    color: #6c757d;
+    font-size: 1.2rem;
+    display: flex;
+    align-items: center;
+}
+
+.estados-leyenda {
+    display: flex;
+    justify-content: center;
+    gap: 2rem;
+    padding: 1rem;
+    background: #f8f9fa;
+    border-radius: 8px;
+    margin-top: 2rem;
+}
+
+.leyenda-item {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.9rem;
+    color: #6c757d;
+}
+
+.leyenda-color {
+    width: 16px;
+    height: 16px;
+    border-radius: 4px;
+}
+
+/* Sección de Actualizaciones */
+.actualizaciones-section {
+    background: white;
+    padding: 2rem;
+    border-radius: 10px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+.actualizacion-form {
+    margin-bottom: 2rem;
+}
+
+.actualizacion-form textarea {
+    border-radius: 8px 0 0 8px;
+    resize: none;
+    border: 1px solid #ced4da;
+}
+
+.actualizacion-form button {
+    border-radius: 0 8px 8px 0;
+    padding: 0.5rem 1rem;
+}
+
+.actualizaciones-list {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    max-height: 500px;
+    overflow-y: auto;
+    padding-right: 0.5rem;
+}
+
+.actualizaciones-list::-webkit-scrollbar {
+    width: 6px;
+}
+
+.actualizaciones-list::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 3px;
+}
+
+.actualizaciones-list::-webkit-scrollbar-thumb {
+    background: #888;
+    border-radius: 3px;
+}
+
+.actualizacion-item {
+    background: #f8f9fa;
+    padding: 1.5rem;
+    border-radius: 8px;
+    border-left: 4px solid #5768ff;
+}
+
+.actualizacion-meta {
+    color: #6c757d;
+    font-size: 0.9rem;
+    margin-bottom: 0.5rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.actualizacion-meta i {
+    margin-right: 0.5rem;
+}
+
+.actualizacion-meta .fecha {
+    opacity: 0.8;
+}
+
+.actualizacion-meta form {
+    margin: 0;
+}
+
+.actualizacion-meta .btn-link {
+    color: #dc3545;
+    text-decoration: none;
+    transition: all 0.2s;
+}
+
+.actualizacion-meta .btn-link:hover {
+    color: #bb2d3b;
+    transform: scale(1.1);
+}
+
+.no-actualizaciones,
+.no-proyectos {
+    text-align: center;
+    padding: 2rem;
+    color: #6c757d;
+    background: #f8f9fa;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+}
+
+/* Responsive */
+@media (max-width: 1200px) {
+    .temario-header {
+        flex-direction: column;
+        text-align: center;
+        gap: 1rem;
     }
     
-    /* Estilos para la ruta de comisiones */
-    .ruta-comision-container {
-        background-color: #f5f5f5;
-        border-radius: 8px;
-        border-left: 4px solid #153664;
-        padding: 1rem;
-        margin-bottom: 1rem;
-    }
-    
-    .ruta-comision-badge {
-        position: relative;
-        font-size: 0.85rem;
-        padding: 0.5rem 0.7rem 0.5rem 1.2rem;
-        box-shadow: 0 1px 3px rgba(0,0,0,0.1);
-        border-radius: 4px;
-        color: white;
-        display: inline-flex;
-        align-items: center;
-        margin-right: 0.5rem;
-        margin-bottom: 0.5rem;
-    }
-    
-    .ruta-comision-numero {
-        position: absolute;
-        top: -0.5rem;
-        left: -0.5rem;
-        width: 1.5rem;
-        height: 1.5rem;
-        background-color: white;
-        color: #333;
-        border-radius: 50%;
-        display: flex;
-        align-items: center;
+    .temario-title h2 {
         justify-content: center;
-        font-size: 0.7rem;
-        font-weight: bold;
-        border: 1px solid rgba(0,0,0,0.1);
     }
     
-    .estado-pendiente { background-color: #6c757d; }
-    .estado-tratandose { background-color: #5768ff; color: #212529; }
-    .estado-aprobado { background-color: #28a745; }
-    .estado-desaprobado { background-color: #dc3545; }
+    .temario-meta {
+        justify-content: center;
+    }
+}
+
+@media (max-width: 768px) {
+    .temario-container {
+        padding: 1rem;
+    }
+    
+    .comisiones-wrapper {
+        flex-direction: column;
+        align-items: stretch;
+    }
+    
+    .comision-card {
+        min-width: auto;
+    }
+    
+    .comision-separator {
+        transform: rotate(90deg);
+        margin: 1rem 0;
+    }
+}
+
+#toggleAllProyectos {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+#toggleAllProyectos i {
+    transition: transform 0.3s ease;
+}
+
+#toggleAllProyectos.collapsed i {
+    transform: rotate(180deg);
+}
 </style>
+
+<script>
+// Función para contraer todos los proyectos al cargar la página
+document.addEventListener('DOMContentLoaded', function() {
+    const cards = document.querySelectorAll('.proyecto-card');
+    cards.forEach(card => {
+        card.classList.add('collapsed');
+    });
+    
+    // Actualizar el texto del botón
+    const toggleButton = document.getElementById('toggleAllProyectos');
+    toggleButton.innerHTML = '<i class="fas fa-expand-alt"></i> Expandir Todos';
+    toggleButton.classList.add('collapsed');
+});
+
+function toggleProyecto(header) {
+    const card = header.closest('.proyecto-card');
+    card.classList.toggle('collapsed');
+}
+
+document.getElementById('toggleAllProyectos').addEventListener('click', function() {
+    const cards = document.querySelectorAll('.proyecto-card');
+    const isCollapsing = !this.classList.contains('collapsed');
+    
+    cards.forEach(card => {
+        if (isCollapsing) {
+            card.classList.add('collapsed');
+        } else {
+            card.classList.remove('collapsed');
+        }
+    });
+    
+    this.classList.toggle('collapsed');
+    this.innerHTML = isCollapsing ? 
+        '<i class="fas fa-expand-alt"></i> Expandir Todos' : 
+        '<i class="fas fa-compress-alt"></i> Contraer Todos';
+});
+</script>
 {% endblock %}
