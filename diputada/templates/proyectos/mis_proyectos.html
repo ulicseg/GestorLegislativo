@@ -18,7 +18,7 @@
 <div class="card shadow-sm mb-4">
     <div class="card-body">
         <form method="get" class="row g-3">
-            <div class="col-md-4">
+            <div class="col-md-3">
                 <div class="input-group">
                     <span class="input-group-text bg-light">
                         <i class="fas fa-search text-muted"></i>
@@ -34,8 +34,7 @@
                     {{ filter_form.numero }}
                 </div>
             </div>
-            {% if es_diputada %}
-            <div class="col-md-3">
+            <div class="col-md-4">
                 <div class="input-group">
                     <span class="input-group-text bg-light">
                         <i class="fas fa-tag text-muted"></i>
@@ -43,7 +42,6 @@
                     {{ filter_form.categoria }}
                 </div>
             </div>
-            {% endif %}
             <div class="col-md-2">
                 <button type="submit" class="btn btn-primary w-100">
                     Filtrar
@@ -69,7 +67,7 @@
                     </span>
                 </div>
                 <div class="card-body">
-                    <p class="card-text text-muted">{{ proyecto.descripcion|striptags|truncatewords:20 }}</p>
+                    <p class="card-text text-muted">{{ proyecto.descripcion|safe|truncatewords_html:20 }}</p>
                     
                     <!-- Indicador visual de ruta de comisiones -->
                     {% if proyecto.ruta_comisiones.all %}
@@ -83,7 +81,7 @@
                                          data-bs-placement="top" 
                                          title="{{ ruta.comision.nombre }} - {{ ruta.get_estado_display }}"
                                          style="background-color: 
-                                            {% if ruta.estado == 'aprobado' %}#28a745{% elif ruta.estado == 'tratandose' %}#ffc107{% elif ruta.estado == 'desaprobado' %}#dc3545{% else %}#6c757d{% endif %};">
+                                            {% if ruta.estado == 'aprobado' %}#28a745{% elif ruta.estado == 'tratandose' %}#007bff{% elif ruta.estado == 'desaprobado' %}#dc3545{% else %}#6c757d{% endif %};">
                                         {{ ruta.comision.nombre|truncatechars:8 }}
                                     </div>
                                 {% endfor %}
@@ -185,4 +183,4 @@
         });
     });
 </script>
-{% endblock %} 
+{% endblock %}

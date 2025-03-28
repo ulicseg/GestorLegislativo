@@ -8,7 +8,7 @@ from django.db.models import Q, F
 from django.db import models
 from apps.usuario.views import es_diputada
 import json
-from django.http import HttpResponse
+from django.http import HttpResponse, JsonResponse
 from reportlab.pdfgen import canvas
 from reportlab.lib.pagesizes import A4
 from reportlab.lib import colors
@@ -65,6 +65,7 @@ def lista_proyectos(request):
     if filter_form.is_valid():
         busqueda = filter_form.cleaned_data.get('busqueda')
         numero = filter_form.cleaned_data.get('numero')
+        categoria = filter_form.cleaned_data.get('categoria')
         
         if busqueda:
             proyectos_list = proyectos_list.filter(titulo__icontains=busqueda)
@@ -72,11 +73,8 @@ def lista_proyectos(request):
         if numero:
             proyectos_list = proyectos_list.filter(numero__icontains=numero)
         
-        # Solo aplicar filtro de categoría si es diputada
-        if request.user.perfil.es_diputada:
-            categoria = filter_form.cleaned_data.get('categoria')
-            if categoria:
-                proyectos_list = proyectos_list.filter(categoria=categoria)
+        if categoria:
+            proyectos_list = proyectos_list.filter(categoria=categoria)
     
     # Ordenar proyectos por fecha de creación
     proyectos_list = proyectos_list.order_by('-fecha_creacion')
@@ -263,6 +261,11 @@ def editar_actualizacion(request, pk):
         proyecto.categoria != request.user.perfil.categoria or 
         actualizacion.autor != request.user
     ):
+        if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+            return JsonResponse({
+                'success': False,
+                'message': 'No tienes permiso para editar esta actualización.'
+            }, status=403)
         messages.error(request, 'No tienes permiso para editar esta actualización.')
         return redirect('proyectos:detalle_proyecto', pk=proyecto.pk)
 
@@ -270,10 +273,32 @@ def editar_actualizacion(request, pk):
         form = ActualizacionForm(request.POST, instance=actualizacion)
         if form.is_valid():
             form.save()
+            if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+                return JsonResponse({
+                    'success': True,
+                    'message': 'Actualización modificada exitosamente.',
+                    'contenido': form.cleaned_data['contenido']
+                })
             messages.success(request, 'Actualización modificada exitosamente.')
             return redirect('proyectos:detalle_proyecto', pk=proyecto.pk)
+        else:
+            if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+                return JsonResponse({
+                    'success': False,
+                    'message': 'Error al modificar la actualización.',
+                    'errors': form.errors
+                }, status=400)
+            messages.error(request, 'Error al modificar la actualización.')
     else:
         form = ActualizacionForm(instance=actualizacion)
+
+    if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+        return JsonResponse({
+            'success': True,
+            'form': {
+                'contenido': form['contenido'].value()
+            }
+        })
 
     return render(request, 'proyectos/editar_actualizacion.html', {
         'form': form,
@@ -638,13 +663,13 @@ def descargar_temario_pdf(request, pk):
                 estado_texto = ruta.get_estado_display()
                 color_estado = ""
                 
-                if ruta.estado == 'aprobado':
+                if ruta.estado == 'aprobado':  # Despacho
                     color_estado = "green"
-                elif ruta.estado == 'tratandose':
+                elif ruta.estado == 'tratandose':  # Archivo
                     color_estado = "orange"
-                elif ruta.estado == 'desaprobado':
+                elif ruta.estado == 'desaprobado':  # En cartera
                     color_estado = "red"
-                else:
+                else:  # Pendiente
                     color_estado = "gray"
                 
                 elements.append(Paragraph(

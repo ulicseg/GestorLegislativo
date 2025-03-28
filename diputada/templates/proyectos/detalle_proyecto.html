@@ -1,4 +1,5 @@
 {% extends 'base.html' %}
+{% load static %}
 
 {% block title %}{{ proyecto.titulo }}{% endblock %}
 
@@ -78,7 +79,7 @@
                                          aria-valuemax="{{ total_comisiones }}">
                                     </div>
                                 {% elif ruta.estado == 'tratandose' %}
-                                    <div class="progress-bar bg-warning" role="progressbar" 
+                                    <div class="progress-bar bg-primary" role="progressbar" 
                                          style="width: calc(100% / {{ total_comisiones }} / 2);" 
                                          aria-valuenow="0.5" 
                                          aria-valuemin="0" 
@@ -131,21 +132,21 @@
                                                 <form method="post" action="{% url 'proyectos:cambiar_estado_comision' ruta.id %}" class="d-inline">
                                                     {% csrf_token %}
                                                     <input type="hidden" name="estado" value="tratandose">
-                                                    <button type="submit" class="btn btn-outline-warning btn-sm estado-btn {% if ruta.estado == 'tratandose' %}active{% endif %}" title="En tratamiento">
-                                                        <i class="fas fa-sync-alt"></i>
+                                                    <button type="submit" class="btn btn-outline-primary btn-sm estado-btn {% if ruta.estado == 'tratandose' %}active{% endif %}" title="Archivo">
+                                                        <i class="fas fa-file-archive"></i>
                                                     </button>
                                                 </form>
                                                 <form method="post" action="{% url 'proyectos:cambiar_estado_comision' ruta.id %}" class="d-inline">
                                                     {% csrf_token %}
                                                     <input type="hidden" name="estado" value="aprobado">
-                                                    <button type="submit" class="btn btn-outline-success btn-sm estado-btn {% if ruta.estado == 'aprobado' %}active{% endif %}" title="Aprobado">
+                                                    <button type="submit" class="btn btn-outline-success btn-sm estado-btn {% if ruta.estado == 'aprobado' %}active{% endif %}" title="Despacho">
                                                         <i class="fas fa-check"></i>
                                                     </button>
                                                 </form>
                                                 <form method="post" action="{% url 'proyectos:cambiar_estado_comision' ruta.id %}" class="d-inline">
                                                     {% csrf_token %}
                                                     <input type="hidden" name="estado" value="desaprobado">
-                                                    <button type="submit" class="btn btn-outline-danger btn-sm estado-btn {% if ruta.estado == 'desaprobado' %}active{% endif %}" title="Desaprobado">
+                                                    <button type="submit" class="btn btn-outline-danger btn-sm estado-btn {% if ruta.estado == 'desaprobado' %}active{% endif %}" title="En cartera">
                                                         <i class="fas fa-times"></i>
                                                     </button>
                                                 </form>
@@ -171,16 +172,16 @@
                             <span class="leyenda-texto">Pendiente</span>
                         </div>
                         <div class="leyenda-item">
-                            <span class="leyenda-color bg-warning"></span>
-                            <span class="leyenda-texto">En tratamiento</span>
+                            <span class="leyenda-color bg-primary"></span>
+                            <span class="leyenda-texto">Archivo</span>
                         </div>
                         <div class="leyenda-item">
                             <span class="leyenda-color bg-success"></span>
-                            <span class="leyenda-texto">Aprobado</span>
+                            <span class="leyenda-texto">Despacho</span>
                         </div>
                         <div class="leyenda-item">
                             <span class="leyenda-color bg-danger"></span>
-                            <span class="leyenda-texto">Desaprobado</span>
+                            <span class="leyenda-texto">En cartera</span>
                         </div>
                     </div>
                 </div>
@@ -238,7 +239,7 @@
             </div>
             
             {% for actualizacion in actualizaciones %}
-                <div class="actualizacion-item mb-3 p-3 border-bottom">
+                <div class="actualizacion-item mb-3 p-3 border-bottom" id="actualizacion-{{ actualizacion.pk }}">
                     <div class="d-flex justify-content-between align-items-start">
                         <div>
                             <strong>{{ actualizacion.autor.get_full_name }}</strong>
@@ -248,6 +249,11 @@
                         </div>
                         {% if user.perfil.es_diputada or actualizacion.autor == user %}
                             <div class="btn-group">
+                                <button type="button" class="btn btn-sm btn-outline-primary edit-button" 
+                                        id="edit-button-{{ actualizacion.pk }}"
+                                        data-update-id="{{ actualizacion.pk }}">
+                                    <i class="fas fa-edit"></i>
+                                </button>
                                 <form method="post" action="{% url 'proyectos:eliminar_actualizacion' actualizacion.pk %}"
                                       class="d-inline">
                                     {% csrf_token %}
@@ -258,9 +264,27 @@
                             </div>
                         {% endif %}
                     </div>
-                    <div class="mt-2">
+                    <div class="mt-2" id="update-content-{{ actualizacion.pk }}">
                         {{ actualizacion.contenido|safe }}
                     </div>
+                    <form method="post" action="{% url 'proyectos:editar_actualizacion' actualizacion.pk %}" 
+                          class="editor-form mt-3" id="edit-form-{{ actualizacion.pk }}" style="display: none;">
+                        {% csrf_token %}
+                        <div class="form-group">
+                            <textarea name="contenido" id="id_contenido_{{ actualizacion.pk }}" 
+                                      class="form-control">{{ actualizacion.contenido|safe }}</textarea>
+                        </div>
+                        <div class="d-flex justify-content-end mt-2">
+                            <button type="button" class="btn btn-secondary btn-sm me-2" 
+                                    id="cancel-button-{{ actualizacion.pk }}">
+                                <i class="fas fa-times"></i> Cancelar
+                            </button>
+                            <button type="submit" class="btn btn-primary btn-sm" 
+                                    id="save-button-{{ actualizacion.pk }}">
+                                <i class="fas fa-save"></i> Guardar
+                            </button>
+                        </div>
+                    </form>
                 </div>
             {% empty %}
                 <p class="text-muted text-center">No hay actualizaciones aún.</p>
@@ -392,9 +416,9 @@
         color: white;
     }
     
-    .btn-outline-warning.active {
-        background-color: #ffc107;
-        color: #212529;
+    .btn-outline-primary.active {
+        background-color: #007bff;
+        color: white;
     }
     
     .btn-outline-success.active {
@@ -467,8 +491,8 @@
     }
     
     .estado-tratandose .ruta-step-number {
-        background-color: #ffc107;
-        color: #212529;
+        background-color: #007bff;
+        color: white;
     }
     
     .estado-aprobado .ruta-step-number {
@@ -490,8 +514,8 @@
     }
     
     .estado-tratandose .ruta-step-content {
-        border-color: #ffc107;
-        box-shadow: 0 2px 10px rgba(255, 193, 7, 0.2);
+        border-color: #007bff;
+        box-shadow: 0 2px 10px rgba(0, 123, 255, 0.2);
     }
 
     /* Estilos para la barra de progreso */
@@ -511,8 +535,8 @@
     }
 
     .badge.bg-warning {
-        background-color: #ffc107 !important;
-        color: #212529;
+        background-color: #007bff !important;
+        color: white;
     }
 
     .badge.bg-success {
@@ -576,6 +600,84 @@
     .card-header.bg-light {
         background-color: #f8f9fa !important;
     }
+
+    /* Estilos para los formularios de edición */
+    .editor-form {
+        background-color: #f8f9fa;
+        padding: 1rem;
+        border-radius: 6px;
+        border: 1px solid #e9ecef;
+    }
+
+    .editor-form textarea {
+        min-height: 150px;
+        resize: vertical;
+    }
+
+    .editor-form .btn-group {
+        margin-top: 1rem;
+    }
+
+    .editor-form .btn {
+        padding: 0.375rem 0.75rem;
+        font-size: 0.875rem;
+    }
+
+    .editor-form .btn i {
+        margin-right: 0.25rem;
+    }
+
+    /* Estilos para los mensajes de alerta */
+    .alert {
+        margin-bottom: 1rem;
+        border-radius: 4px;
+    }
+
+    .alert-success {
+        background-color: #d4edda;
+        border-color: #c3e6cb;
+        color: #155724;
+    }
+
+    .alert-danger {
+        background-color: #f8d7da;
+        border-color: #f5c6cb;
+        color: #721c24;
+    }
+
+    .alert .close {
+        float: right;
+        font-size: 1.5rem;
+        font-weight: 700;
+        line-height: 1;
+        color: #000;
+        text-shadow: 0 1px 0 #fff;
+        opacity: .5;
+        transition: opacity .15s linear;
+    }
+
+    .alert .close:hover {
+        color: #000;
+        text-decoration: none;
+        opacity: .75;
+    }
+
+    /* Animaciones para la transición entre contenido y editor */
+    .actualizacion-item {
+        transition: all 0.3s ease;
+    }
+
+    .actualizacion-item:hover {
+        background-color: #f8f9fa;
+    }
+
+    #update-content-* {
+        transition: opacity 0.3s ease;
+    }
+
+    .editor-form {
+        transition: all 0.3s ease;
+    }
 </style>
 
 <!-- Modales de eliminación (sin cambios) -->
@@ -609,4 +711,113 @@
     </div>
 </div>
 {% endif %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Inicializar CKEditor para el formulario de nueva actualización
+    CKEDITOR.replace('id_contenido');
+
+    // Inicializar CKEditor para cada formulario de edición
+    document.querySelectorAll('.editor-form textarea').forEach(function(textarea) {
+        CKEDITOR.replace(textarea.id);
+    });
+
+    // Función para manejar la edición de actualizaciones
+    function handleEditUpdate(updateId) {
+        const updateContent = document.querySelector(`#update-content-${updateId}`);
+        const editForm = document.querySelector(`#edit-form-${updateId}`);
+        const editButton = document.querySelector(`#edit-button-${updateId}`);
+        const cancelButton = document.querySelector(`#cancel-button-${updateId}`);
+        const saveButton = document.querySelector(`#save-button-${updateId}`);
+
+        // Ocultar el contenido y mostrar el formulario
+        updateContent.style.display = 'none';
+        editForm.style.display = 'block';
+        editButton.style.display = 'none';
+
+        // Manejar el botón de cancelar
+        cancelButton.addEventListener('click', function(e) {
+            e.preventDefault();
+            updateContent.style.display = 'block';
+            editForm.style.display = 'none';
+            editButton.style.display = 'block';
+        });
+
+        // Manejar el envío del formulario
+        editForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const formData = new FormData(this);
+            const editor = CKEDITOR.instances[`id_contenido_${updateId}`];
+            formData.set('contenido', editor.getData());
+
+            fetch(`/proyectos/actualizacion/${updateId}/editar/`, {
+                method: 'POST',
+                body: formData,
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    // Actualizar el contenido
+                    updateContent.innerHTML = data.contenido;
+                    updateContent.style.display = 'block';
+                    editForm.style.display = 'none';
+                    editButton.style.display = 'block';
+                    
+                    // Mostrar mensaje de éxito
+                    const alertDiv = document.createElement('div');
+                    alertDiv.className = 'alert alert-success alert-dismissible fade show';
+                    alertDiv.innerHTML = `
+                        ${data.message}
+                        <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                            <span aria-hidden="true">&times;</span>
+                        </button>
+                    `;
+                    document.querySelector('.container').insertBefore(alertDiv, document.querySelector('.row'));
+                    
+                    // Eliminar el mensaje después de 3 segundos
+                    setTimeout(() => alertDiv.remove(), 3000);
+                } else {
+                    // Mostrar mensaje de error
+                    const alertDiv = document.createElement('div');
+                    alertDiv.className = 'alert alert-danger alert-dismissible fade show';
+                    alertDiv.innerHTML = `
+                        ${data.message}
+                        <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                            <span aria-hidden="true">&times;</span>
+                        </button>
+                    `;
+                    document.querySelector('.container').insertBefore(alertDiv, document.querySelector('.row'));
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                const alertDiv = document.createElement('div');
+                alertDiv.className = 'alert alert-danger alert-dismissible fade show';
+                alertDiv.innerHTML = `
+                    Error al actualizar la actualización.
+                    <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                `;
+                document.querySelector('.container').insertBefore(alertDiv, document.querySelector('.row'));
+            });
+        });
+    }
+
+    // Agregar event listeners a los botones de edición
+    document.querySelectorAll('.edit-button').forEach(function(button) {
+        button.addEventListener('click', function() {
+            const updateId = this.getAttribute('data-update-id');
+            handleEditUpdate(updateId);
+        });
+    });
+});
+</script>
+{% endblock %}
 {% endblock %}

@@ -63,7 +63,11 @@
                     <ul class="list-group list-group-flush">
                         {% for proyecto_temario in temario.proyectotemario_set.all %}
                             <li class="list-group-item d-flex justify-content-between align-items-center">
-                                {{ proyecto_temario.proyecto.titulo }}
+                                <div>
+                                    {{ proyecto_temario.proyecto.get_tipo_display }} 
+                                    <span class="proyecto-numero">{{ proyecto_temario.proyecto.numero }}</span>
+                                    {{ proyecto_temario.proyecto.titulo }}
+                                </div>
                                 <span class="badge bg-secondary">{{ proyecto_temario.orden }}</span>
                             </li>
                         {% empty %}
@@ -129,4 +133,15 @@
         </div>
     {% endfor %}
 </div>
-{% endblock %} 
+
+<style>
+    .proyecto-numero {
+        background-color: rgba(21, 54, 100, 0.15);
+        color: #153664;
+        padding: 2px 8px;
+        border-radius: 4px;
+        font-weight: bold;
+        display: inline-block;
+    }
+</style>
+{% endblock %}

@@ -73,15 +73,15 @@ class ProyectoFilterForm(forms.Form):
         })
     )
     
+    categoria = forms.ModelChoiceField(
+        queryset=Categoria.objects.all(),
+        required=False,
+        empty_label="Todas las comisiones",
+        widget=forms.Select(attrs={'class': 'form-control'})
+    )
+    
     def __init__(self, *args, user=None, **kwargs):
         super().__init__(*args, **kwargs)
-        if user and user.perfil.es_diputada:
-            self.fields['categoria'] = forms.ModelChoiceField(
-                queryset=Categoria.objects.all(),
-                required=False,
-                empty_label="Todas las comisiones",
-                widget=forms.Select(attrs={'class': 'form-control'})
-            )
 
 class TemarioForm(forms.ModelForm):
     class Meta:

@@ -23,7 +23,7 @@ class Proyecto(models.Model):
     
     numero = models.CharField(max_length=20, unique=True, help_text="Formato: XXXX/XX")
     tipo = models.CharField(max_length=20, choices=TIPO_CHOICES, default='ley')
-    titulo = models.CharField(max_length=200)
+    titulo = models.CharField(max_length=1000)
     descripcion = RichTextField()
     categoria = models.ForeignKey(Categoria, on_delete=models.CASCADE)
     creado_por = models.ForeignKey(User, on_delete=models.CASCADE)
@@ -117,9 +117,9 @@ class ProyectoTemario(models.Model):
 class RutaComision(models.Model):
     ESTADO_CHOICES = [
         ('pendiente', 'Pendiente'),
-        ('tratandose', 'En tratamiento'),
-        ('aprobado', 'Aprobado'),
-        ('desaprobado', 'Desaprobado'),
+        ('tratandose', 'Archivo'),
+        ('aprobado', 'Despacho'),
+        ('desaprobado', 'En cartera'),
     ]
     
     proyecto = models.ForeignKey(Proyecto, on_delete=models.CASCADE, related_name='ruta_comisiones')

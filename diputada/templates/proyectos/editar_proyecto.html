@@ -46,10 +46,7 @@
                     </div>
                 {% endif %}
                 {% if not user.perfil.es_diputada %}
-                    <div class="form-text text-warning">
-                        <i class="fas fa-exclamation-triangle me-1"></i>
-                        Si cambias la categoría, ya no podrás ver este proyecto en tu lista.
-                    </div>
+
                 {% endif %}
             </div>
             <div class="mb-3">
@@ -70,12 +67,12 @@
                     </div>
                 {% endif %}
             </div>
-            
+
             <div class="mb-3">
                 <label class="form-label">Ruta de Comisiones</label>
                 <div class="border rounded p-3">
                     <p class="text-muted small mb-2">Seleccione las comisiones por las que debe pasar este proyecto y ordénelas arrastrando y soltando según el orden deseado.</p>
-                    
+
                     <div class="mb-3">
                         <select id="comision-selector" class="form-select">
                             <option value="">-- Seleccionar comisión para agregar --</option>
@@ -87,19 +84,19 @@
                             <i class="fas fa-plus me-1"></i>Agregar a la ruta
                         </button>
                     </div>
-                    
+
                     <div class="alert alert-info small">
                         <i class="fas fa-info-circle me-1"></i>
                         Arrastre las comisiones para cambiar su orden. El orden de arriba hacia abajo determina la secuencia de la ruta.
                     </div>
-                    
+
                     <div id="comisiones-seleccionadas" class="list-group mb-3">
                         <!-- Aquí se mostrarán las comisiones seleccionadas -->
                     </div>
-                    
+
                     <!-- Campo oculto para almacenar los IDs de las comisiones en orden -->
                     <input type="hidden" name="comisiones_orden" id="comisiones-orden" value="">
-                    
+
                     <!-- Mantenemos el campo original oculto para compatibilidad -->
                     <div style="display: none;">
                         <!-- Vaciamos el campo comisiones_ruta para evitar duplicación -->
@@ -112,9 +109,9 @@
                 </div>
                 <div class="form-text">{{ form.comisiones_ruta.help_text }}</div>
             </div>
-            
+
             <div class="d-flex justify-content-between">
-                <a href="{% url 'proyectos:detalle_proyecto' proyecto.pk %}{% if from_mis_proyectos %}?from=mis_proyectos{% endif %}" 
+                <a href="{% url 'proyectos:detalle_proyecto' proyecto.pk %}{% if from_mis_proyectos %}?from=mis_proyectos{% endif %}"
                    class="btn btn-secondary">
                     <i class="fas fa-arrow-left me-1"></i>Volver
                 </a>
@@ -136,10 +133,6 @@
             </div>
             <div class="modal-body">
                 <p>¿Estás seguro que deseas cambiar la comisión del proyecto?</p>
-                <p class="text-warning">
-                    <i class="fas fa-exclamation-triangle me-1"></i>
-                    Si no eres diputada, ya no podrás ver este proyecto en tu lista.
-                </p>
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
@@ -157,7 +150,7 @@ document.addEventListener('DOMContentLoaded', function() {
     const categoriaSelect = form.querySelector('[name="categoria"]');
     const originalCategoria = '{{ proyecto.categoria.id }}';
     const isDiputada = {{ user.perfil.es_diputada|yesno:"true,false" }};
-    
+
     // Inicializar Sortable para permitir arrastrar y soltar
     const comisionesLista = document.getElementById('comisiones-seleccionadas');
     const sortable = new Sortable(comisionesLista, {
@@ -165,13 +158,13 @@ document.addEventListener('DOMContentLoaded', function() {
         ghostClass: 'bg-light',
         onEnd: actualizarOrden
     });
-    
+
     // Manejar la adición de comisiones a la ruta
     document.getElementById('agregar-comision').addEventListener('click', function() {
         const selector = document.getElementById('comision-selector');
         const comisionId = selector.value;
         const comisionNombre = selector.options[selector.selectedIndex].text;
-        
+
         if (comisionId) {
             // Verificar si la comisión ya está en la lista
             if (!document.querySelector(`[data-comision-id="${comisionId}"]`)) {
@@ -183,16 +176,16 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         }
     });
-    
+
     // Cargar comisiones existentes
     cargarComisionesExistentes();
-    
+
     // Función para agregar una comisión a la lista
     function agregarComision(id, nombre) {
         const item = document.createElement('div');
         item.className = 'list-group-item d-flex justify-content-between align-items-center';
         item.setAttribute('data-comision-id', id);
-        
+
         item.innerHTML = `
             <div class="d-flex align-items-center">
                 <span class="me-2 handle" style="cursor: grab;">
@@ -204,31 +197,31 @@ document.addEventListener('DOMContentLoaded', function() {
                 <i class="fas fa-times"></i>
             </button>
         `;
-        
+
         // Agregar evento para eliminar la comisión
         item.querySelector('.eliminar-comision').addEventListener('click', function() {
             item.remove();
             actualizarOrden();
         });
-        
+
         comisionesLista.appendChild(item);
     }
-    
+
     // Función para actualizar el orden y sincronizar con los campos ocultos
     function actualizarOrden() {
         const comisiones = Array.from(comisionesLista.querySelectorAll('[data-comision-id]'))
             .map(item => item.getAttribute('data-comision-id'));
-        
+
         // Actualizar campo oculto con el orden
         document.getElementById('comisiones-orden').value = comisiones.join(',');
-        
+
         // Sincronizar con el campo original de comisiones_ruta
         const checkboxes = form.querySelectorAll('[name="comisiones_ruta"]');
         checkboxes.forEach(checkbox => {
             checkbox.checked = comisiones.includes(checkbox.value);
         });
     }
-    
+
     // Función para cargar comisiones existentes
     function cargarComisionesExistentes() {
         // Limpiar cualquier comisión que pudiera estar seleccionada en el campo oculto
@@ -236,19 +229,19 @@ document.addEventListener('DOMContentLoaded', function() {
         checkboxes.forEach(checkbox => {
             checkbox.checked = false;
         });
-        
+
         // Limpiar el contenedor de comisiones seleccionadas
         comisionesLista.innerHTML = '';
-        
+
         const comisionesNombres = {};
-        
+
         // Crear un mapa de IDs a nombres
         document.querySelectorAll('#comision-selector option').forEach(option => {
             if (option.value) {
                 comisionesNombres[option.value] = option.text;
             }
         });
-        
+
         // Obtener el orden actual de las comisiones desde el backend
         {% if proyecto.ruta_comisiones.all %}
             {% for ruta in proyecto.ruta_comisiones.all|dictsort:"orden" %}
@@ -258,10 +251,10 @@ document.addEventListener('DOMContentLoaded', function() {
             // Si no hay comisiones en la ruta, no hacemos nada
             // Las comisiones se agregarán manualmente
         {% endif %}
-        
+
         actualizarOrden();
     }
-    
+
     // Manejar envío del formulario
     form.addEventListener('submit', function(e) {
         if (!isDiputada && categoriaSelect.value !== originalCategoria) {
