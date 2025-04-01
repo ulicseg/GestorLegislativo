@@ -22,18 +22,18 @@
             </a>
             <a href="{% url 'proyectos:descargar_temario_pdf' temario.pk %}" class="btn btn-info">
                 <i class="fas fa-file-pdf"></i> PDF
-            </a>
-            {% if user.perfil.es_diputada %}
+                </a>
+                {% if user.perfil.es_diputada %}
             <button class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#eliminarTemario">
                 <i class="fas fa-trash"></i> Eliminar
-            </button>
-            {% endif %}
+                    </button>
+                {% endif %}
             <a href="{% url 'proyectos:listar_temarios' %}" class="btn btn-primary">
                 <i class="fas fa-arrow-left"></i> Volver
-            </a>
+                </a>
         </div>
     </div>
-
+    
     <!-- Proyectos -->
     <div class="proyectos-section">
         <div class="d-flex justify-content-between align-items-center mb-3">
@@ -44,14 +44,14 @@
                 <i class="fas fa-compress-alt"></i> Contraer Todos
             </button>
         </div>
-
+        
         {% for pt in proyectos_temario %}
         <div class="proyecto-card collapsed">
             <div class="proyecto-header" onclick="toggleProyecto(this)">
                 <div class="d-flex align-items-center">
                     <i class="fas fa-chevron-right toggle-icon"></i>
                     <h5 class="mb-0 ms-2">{{ pt.orden }}. {{ pt.proyecto.get_tipo_display }} {{ pt.proyecto.numero }} - {{ pt.proyecto.titulo }}</h5>
-                </div>
+                    </div>
                 <div class="proyecto-meta">
                     <span class="badge bg-secondary">{{ pt.proyecto.categoria.nombre }}</span>
                 </div>
@@ -59,7 +59,7 @@
             <div class="proyecto-content">
                 <!-- Resto del contenido del proyecto -->
                 <div class="proyecto-descripcion">
-                    {{ pt.proyecto.descripcion|safe }}
+                            {{ pt.proyecto.descripcion|safe }}
                 </div>
 
                 <!-- Ruta de Comisiones -->
@@ -89,10 +89,10 @@
                             <span>Fin</span>
                         </div>
                     </div>
-
+                    
                     <!-- Comisiones -->
                     <div class="comisiones-wrapper">
-                        {% for ruta in pt.proyecto.ruta_comisiones.all|dictsort:"orden" %}
+                            {% for ruta in pt.proyecto.ruta_comisiones.all|dictsort:"orden" %}
                         <div class="comision-card">
                             <div class="comision-header">
                                 <div class="comision-number">{{ ruta.orden }}</div>
@@ -139,9 +139,9 @@
                         {% if not forloop.last %}
                         <div class="comision-separator">
                             <i class="fas fa-chevron-right"></i>
-                        </div>
+                                </div>
                         {% endif %}
-                        {% endfor %}
+                            {% endfor %}
                     </div>
 
                     <!-- Leyenda -->
@@ -224,22 +224,22 @@
                                     </div>
                                 </div>
                             </div>
-                        </div>
+                            </div>
                         {% empty %}
                         <div class="no-actualizaciones">
                             <i class="fas fa-info-circle"></i>
-                            No hay actualizaciones registradas
-                        </div>
+                                No hay actualizaciones registradas
+                            </div>
                         {% endfor %}
+                    </div>
                     </div>
                 </div>
             </div>
-        </div>
         {% empty %}
         <div class="no-proyectos">
             <i class="fas fa-info-circle"></i>
-            No hay proyectos asignados a este temario
-        </div>
+                No hay proyectos asignados a este temario
+            </div>
         {% endfor %}
     </div>
 </div>
@@ -377,7 +377,7 @@
 }
 
 .proyecto-header h5 {
-    color: #153664;
+        color: #153664;
     font-size: 1.1rem;
     margin: 0;
 }
@@ -407,7 +407,7 @@
 
 .proyecto-meta .badge {
     padding: 0.25rem 0.5rem;
-    border-radius: 4px;
+        border-radius: 4px;
     font-size: 0.8rem;
 }
 
@@ -508,7 +508,7 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    font-weight: bold;
+        font-weight: bold;
 }
 
 .comision-header h5 {

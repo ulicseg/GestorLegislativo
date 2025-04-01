@@ -319,6 +319,13 @@ def eliminar_actualizacion(request, pk):
     else:
         messages.error(request, 'No tienes permiso para eliminar esta actualización.')
     
+    # Obtener el referer para determinar de dónde viene la petición
+    referer = request.META.get('HTTP_REFERER', '')
+    if 'temarios' in referer:
+        # Extraer el ID del temario de la URL
+        temario_id = referer.split('temarios/')[1].split('/')[0]
+        return redirect('proyectos:detalle_temario', pk=temario_id)
+    
     return redirect('proyectos:detalle_proyecto', pk=proyecto.pk)
 
 @login_required
@@ -749,5 +756,12 @@ def cambiar_estado_comision(request, ruta_id):
             messages.success(request, f'Estado actualizado a {ruta.get_estado_display()} para la comisión {ruta.comision.nombre}.')
         else:
             messages.error(request, 'Estado no válido.')
+    
+    # Obtener el referer para determinar de dónde viene la petición
+    referer = request.META.get('HTTP_REFERER', '')
+    if 'temarios' in referer:
+        # Extraer el ID del temario de la URL
+        temario_id = referer.split('temarios/')[1].split('/')[0]
+        return redirect('proyectos:detalle_temario', pk=temario_id)
     
     return redirect('proyectos:detalle_proyecto', pk=proyecto.pk)

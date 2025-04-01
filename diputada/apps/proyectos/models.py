@@ -19,6 +19,7 @@ class Proyecto(models.Model):
     TIPO_CHOICES = [
         ('ley', 'Proyecto de Ley'),
         ('resolucion', 'Proyecto de Resolución'),
+        ('expediente', 'Proyecto de Expediente'),
     ]
     
     numero = models.CharField(max_length=20, unique=True, help_text="Formato: XXXX/XX")
