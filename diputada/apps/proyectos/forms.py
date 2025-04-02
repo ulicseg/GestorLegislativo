@@ -15,13 +15,14 @@ class ProyectoForm(forms.ModelForm):
     
     class Meta:
         model = Proyecto
-        fields = ['numero', 'tipo', 'titulo', 'descripcion', 'categoria', 'comisiones_ruta']
+        fields = ['numero', 'tipo', 'titulo', 'descripcion', 'categoria', 'comisiones_ruta', 'es_proyecto_diputada']
         widgets = {
             'numero': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Ej: 2323/23'}),
             'tipo': forms.Select(attrs={'class': 'form-control'}),
             'titulo': forms.TextInput(attrs={'class': 'form-control'}),
             'descripcion': CKEditorWidget(),
             'categoria': forms.Select(attrs={'class': 'form-control'}),
+            'es_proyecto_diputada': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
         }
 
     def __init__(self, *args, **kwargs):

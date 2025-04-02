@@ -19,7 +19,7 @@ class Proyecto(models.Model):
     TIPO_CHOICES = [
         ('ley', 'Proyecto de Ley'),
         ('resolucion', 'Proyecto de Resolución'),
-        ('expediente', 'Proyecto de Expediente'),
+        ('expediente', 'Expediente'),
     ]
     
     numero = models.CharField(max_length=20, unique=True, help_text="Formato: XXXX/XX")
@@ -28,6 +28,7 @@ class Proyecto(models.Model):
     descripcion = RichTextField()
     categoria = models.ForeignKey(Categoria, on_delete=models.CASCADE)
     creado_por = models.ForeignKey(User, on_delete=models.CASCADE)
+    es_proyecto_diputada = models.BooleanField(default=False, help_text="Si está marcado, el proyecto aparecerá en 'Mis Proyectos' de la diputada")
     fecha_creacion = models.DateTimeField(auto_now_add=True)
     fecha_modificacion = models.DateTimeField(auto_now=True)
 

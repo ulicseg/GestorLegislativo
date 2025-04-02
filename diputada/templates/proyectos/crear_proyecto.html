@@ -93,6 +93,19 @@
                         </div>
                         <div class="form-text">{{ form.comisiones_ruta.help_text }}</div>
                     </div>
+
+                    <div class="mb-3">
+                        <div class="form-check">
+                            {{ form.es_proyecto_diputada }}
+                            <label class="form-check-label" for="{{ form.es_proyecto_diputada.id_for_label }}">
+                                Es proyecto de la diputada
+                            </label>
+                        </div>
+                        <div class="form-text text-muted">
+                            Si está marcado, el proyecto se podrá ver como proyecto de la diputada en el apartado de "proyectos diputada".
+                        </div>
+                    </div>
+
                     <div class="text-end">
                         <a href="{% url 'proyectos:lista_proyectos' %}" class="btn btn-secondary me-2">
                             <i class="fas fa-times me-1"></i>Cancelar

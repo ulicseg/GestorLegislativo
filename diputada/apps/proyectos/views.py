@@ -20,6 +20,7 @@ from django.urls import reverse
 from bs4 import BeautifulSoup
 import re
 from html import unescape
+from django.contrib.auth.models import User
 
 def limpiar_html(html_content):
     """Limpia el HTML complejo y lo convierte a un formato simple."""
@@ -473,12 +474,12 @@ def mis_proyectos(request):
     # Si es diputada, mostrar sus proyectos
     if request.user.perfil.es_diputada:
         proyectos = Proyecto.objects.filter(
-            creado_por=request.user
+            Q(creado_por=request.user) | Q(es_proyecto_diputada=True)
         ).select_related('categoria').order_by('-fecha_creacion')
     else:
         # Si es asesor, mostrar todos los proyectos de la diputada sin restricción de comisión
         proyectos = Proyecto.objects.filter(
-            creado_por__perfil__es_diputada=True
+            Q(creado_por__perfil__es_diputada=True) | Q(es_proyecto_diputada=True)
         ).select_related('categoria').order_by('-fecha_creacion')
     
     filter_form = ProyectoFilterForm(request.GET, user=request.user)
