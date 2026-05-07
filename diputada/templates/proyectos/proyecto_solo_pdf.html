@@ -7,7 +7,7 @@
             size: letter;
             margin: 2.5cm;
             @top-center {
-                content: "Temario #{{ temario.numero }} - {{ temario.comision.nombre }}";
+                content: "{{ proyecto.get_tipo_display }} {{ proyecto.numero }}{% if temario and temario.comision %} - {{ temario.comision.nombre }}{% endif %}";
                 font-size: 9pt;
             }
             @bottom-right {
@@ -36,12 +36,40 @@
             margin-bottom: 1em;
             text-align: justify;
         }
+        /* Estilos para la sección de actualizaciones */
         .actualizaciones {
-            margin-left: 1em;
-            border-left: 2px solid #ccc;
+            margin-top: 1.5em; /* Más espacio antes de la sección de actualizaciones */
             padding-left: 1em;
+            border-left: 2px solid #ccc; /* Línea a la izquierda de toda la sección */
         }
-        .meta-info {
+        .actualizaciones h4 {
+            margin-bottom: 0.8em; /* Espacio debajo del título "Últimas actualizaciones" */
+            font-size: 1.1em; /* Ligeramente más grande el título de la sección */
+            color: #333; /* Color más oscuro para el título de la sección */
+        }
+        .actualizacion { /* Estilo para cada item de actualización */
+            border-top: 1px solid #eee; /* Línea separadora sutil arriba de cada actualización */
+            padding-top: 0.8em; /* Espacio arriba del contenido de la actualización */
+            margin-top: 0.8em; /* Espacio entre actualizaciones */
+            padding-bottom: 0.5em; /* Espacio debajo del contenido de la actualización */
+        }
+        .actualizacion:first-child { /* Evitar doble borde o margen excesivo en el primer item */
+            border-top: none;
+            margin-top: 0;
+            padding-top: 0.3em;
+        }
+        .actualizacion .meta-info { /* Estilo para la info de autor y fecha en actualizaciones */
+            color: #555; /* Un gris un poco más oscuro para mejor contraste */
+            font-size: 0.85em; /* Ligeramente más pequeño */
+            margin-bottom: 0.4em; /* Espacio entre meta-info y contenido */
+        }
+        .actualizacion .contenido-actualizacion { /* Clase para el div del contenido */
+            font-size: 0.95em; /* Tamaño de fuente para el contenido */
+            line-height: 1.6; /* Mejor interlineado para el contenido */
+            text-align: justify; /* Justificar texto del contenido */
+            color: #333; /* Color de texto principal */
+        }
+        .meta-info { /* Estilo general para meta-info, se mantiene para otras secciones si es necesario */
             color: #666;
             font-size: 0.9em;
             margin-bottom: 1em;
@@ -95,25 +123,28 @@
 </head>
 <body>
     <div class="header">
-        <h1>Temario #{{ temario.numero }}</h1>
-        <h2>{{ temario.comision.nombre }}</h2>
+        <h1>{{ proyecto.get_tipo_display }} {{ proyecto.numero }}</h1>
+        <h2>{{ proyecto.titulo }}</h2>
         <div class="meta-info">
-            Creado el {{ temario.fecha_creacion|date:"d/m/Y" }} por {{ temario.creado_por.get_full_name }}
+            Creado el {{ proyecto.fecha_creacion|date:"d/m/Y" }} por {{ proyecto.creado_por.get_full_name }}
+            {% if temario and temario.comision %}
+            <br>
+            Comisión: {{ temario.comision.nombre }} - Temario #{{ temario.numero }}
+            {% endif %}
         </div>
     </div>
 
-    {% for pt in proyectos_temario %}
     <div class="proyecto">
         <div class="proyecto-titulo">
-            <h3>{{ pt.orden }}. {{ pt.proyecto.get_tipo_display }} {{ pt.proyecto.numero }} {{ pt.proyecto.titulo }}</h3>
+            <h3>{{ proyecto.get_tipo_display }} {{ proyecto.numero }} {{ proyecto.titulo }}</h3>
         </div>
         <div class="proyecto-descripcion">
-            {{ pt.proyecto.descripcion|safe }}
+            {{ proyecto.descripcion|safe }}
         </div>
-        {% if pt.proyecto.ruta_comisiones.all %}
+        {% if proyecto.ruta_comisiones.all %}
         <div class="ruta-comisiones">
             <h4>Ruta de comisiones:</h4>
-            {% for ruta in pt.proyecto.ruta_comisiones.all|dictsort:"orden" %}
+            {% for ruta in proyecto.ruta_comisiones.all|dictsort:"orden" %}
             <div class="comision-badge estado-{{ ruta.estado }}">
                 <span class="comision-orden">{{ forloop.counter }}</span>
                 {{ ruta.comision.nombre }} ({{ ruta.get_estado_display }})
@@ -123,18 +154,17 @@
         {% endif %}
         <div class="actualizaciones">
             <h4>Últimas actualizaciones:</h4>
-            {% for actualizacion in pt.proyecto.actualizaciones.all %}
+            {% for actualizacion in proyecto.actualizaciones.all %}
             <div class="actualizacion">
                 <div class="meta-info">
                     {{ actualizacion.autor.get_full_name }} - {{ actualizacion.fecha|date:"d/m/Y H:i" }}
                 </div>
-                <div>{{ actualizacion.contenido|safe }}</div>
+                <div class="contenido-actualizacion">{{ actualizacion.contenido|safe }}</div>
             </div>
             {% empty %}
             <p>No hay actualizaciones registradas</p>
             {% endfor %}
         </div>
     </div>
-    {% endfor %}
 </body>
 </html>

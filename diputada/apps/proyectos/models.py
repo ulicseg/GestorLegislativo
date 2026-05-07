@@ -19,14 +19,16 @@ class Proyecto(models.Model):
     TIPO_CHOICES = [
         ('ley', 'Proyecto de Ley'),
         ('resolucion', 'Proyecto de Resolución'),
+        ('expediente', 'Expediente'),
     ]
-    
+
     numero = models.CharField(max_length=20, unique=True, help_text="Formato: XXXX/XX")
     tipo = models.CharField(max_length=20, choices=TIPO_CHOICES, default='ley')
-    titulo = models.CharField(max_length=200)
+    titulo = models.CharField(max_length=1000)
     descripcion = RichTextField()
     categoria = models.ForeignKey(Categoria, on_delete=models.CASCADE)
     creado_por = models.ForeignKey(User, on_delete=models.CASCADE)
+    es_proyecto_diputada = models.BooleanField(default=False, help_text="Si está marcado, el proyecto aparecerá en 'Mis Proyectos' de la diputada")
     fecha_creacion = models.DateTimeField(auto_now_add=True)
     fecha_modificacion = models.DateTimeField(auto_now=True)
 
@@ -61,7 +63,7 @@ class Archivo(models.Model):
     nombre = models.CharField(max_length=200)
     archivo = models.FileField(upload_to='proyectos/archivos/')
     subido_por = models.ForeignKey(
-        User, 
+        User,
         on_delete=models.CASCADE,
         related_name='archivos_subidos'
     )
@@ -81,25 +83,25 @@ class Temario(models.Model):
         related_name='temarios_creados'
     )
     proyectos = models.ManyToManyField(Proyecto, through='ProyectoTemario')
-    
+
     class Meta:
         unique_together = ['numero', 'comision']
         verbose_name = 'Temario'
         verbose_name_plural = 'Temarios'
         ordering = ['-fecha_creacion']
-    
+
     def __str__(self):
         return f"Temario {self.numero} - {self.comision}"
 
 class ProyectoTemario(models.Model):
     proyecto = models.ForeignKey(
-        Proyecto, 
+        Proyecto,
         on_delete=models.CASCADE,
         related_name='temarios_asociados'
     )
     temario = models.ForeignKey(Temario, on_delete=models.CASCADE)
     orden = models.PositiveIntegerField()
-    
+
     class Meta:
         ordering = ['orden']
         unique_together = ['temario', 'orden']
@@ -117,21 +119,21 @@ class ProyectoTemario(models.Model):
 class RutaComision(models.Model):
     ESTADO_CHOICES = [
         ('pendiente', 'Pendiente'),
-        ('tratandose', 'En tratamiento'),
-        ('aprobado', 'Aprobado'),
-        ('desaprobado', 'Desaprobado'),
+        ('tratandose', 'Archivo'),
+        ('aprobado', 'Despacho'),
+        ('desaprobado', 'En cartera'),
     ]
-    
+
     proyecto = models.ForeignKey(Proyecto, on_delete=models.CASCADE, related_name='ruta_comisiones')
     comision = models.ForeignKey(Categoria, on_delete=models.CASCADE)
     orden = models.PositiveIntegerField(default=1)
     estado = models.CharField(max_length=20, choices=ESTADO_CHOICES, default='pendiente')
-    
+
     class Meta:
         ordering = ['orden']
         unique_together = ['proyecto', 'comision']
         verbose_name = 'Ruta de Comisión'
         verbose_name_plural = 'Rutas de Comisiones'
-    
+
     def __str__(self):
         return f"{self.comision.nombre} - {self.get_estado_display()}"

@@ -66,9 +66,15 @@
                                 {{ pt.proyecto.titulo }}
                             </a>
                         </h6>
-                        <span class="badge" style="background-color: #153664;">
-                            {{ pt.proyecto.categoria.nombre }}
-                        </span>
+                        <div class="d-flex align-items-center">
+                            <span class="badge me-2" style="background-color: #153664;">
+                                {{ pt.proyecto.categoria.nombre }}
+                            </span>
+                            <a href="{% url 'proyectos:descargar_proyecto_pdf' pt.proyecto.pk temario.pk %}" 
+                               class="btn btn-sm btn-petroleo" title="Descargar PDF del proyecto">
+                                <i class="fas fa-file-pdf"></i> PDF
+                            </a>
+                        </div>
                     </div>
                 </div>
                 <div class="card-body">
@@ -96,26 +102,104 @@
                     </div>
                     {% endif %}
                     
-                    <div class="actualizaciones-section" style="background-color: #d4d4d4; border-radius: 8px; padding: 1rem;">
-                        <h6 class="mb-3">
-                            <i class="fas fa-history me-2"></i>Últimas actualizaciones:
-                        </h6>
-                        {% for actualizacion in pt.proyecto.actualizaciones.all %}
-                            <div class="border-start border-secondary ps-3 mb-2" 
-                                 style="background-color: white; padding: 0.8rem; border-radius: 0 8px 8px 0; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">
-                                <div class="small text-muted">
-                                    <i class="fas fa-user-edit me-1"></i>
-                                    {{ actualizacion.autor.get_full_name }} - 
-                                    {{ actualizacion.fecha|date:"d/m/Y H:i" }}
+                    <!-- Sección de Actualizaciones -->
+                    <div class="card shadow-sm mt-4">
+                        <div class="card-header">
+                            <h5 class="mb-0">
+                                <i class="fas fa-history me-2"></i>Actualizaciones
+                            </h5>
+                        </div>
+                        <div class="card-body">
+                            <button class="btn btn-custom-primary mb-4" 
+                                    type="button" 
+                                    data-bs-toggle="collapse" 
+                                    data-bs-target="#nuevaActualizacion-{{ pt.proyecto.pk }}" 
+                                    aria-expanded="false" 
+                                    aria-controls="nuevaActualizacion-{{ pt.proyecto.pk }}">
+                                <i class="fas fa-plus-circle me-1"></i>
+                                Nueva Actualización
+                            </button>
+                            
+                            <!-- Formulario desplegable -->
+                            <div class="collapse mb-4" id="nuevaActualizacion-{{ pt.proyecto.pk }}">
+                                <div class="card">
+                                    <div class="card-body">
+                                        <form method="post" action="{% url 'proyectos:crear_actualizacion' pt.proyecto.pk %}"
+                                              class="create-update-form" id="create-form-{{ pt.proyecto.pk }}">
+                                            {% csrf_token %}
+                                            <div class="mb-3">
+                                                <textarea name="contenido" id="id_contenido_create_{{ pt.proyecto.pk }}" class="form-control editor-create" required></textarea>
+                                            </div>
+                                            <div class="d-flex justify-content-end">
+                                                <button type="button" 
+                                                        class="btn btn-secondary me-2" 
+                                                        data-bs-toggle="collapse" 
+                                                        data-bs-target="#nuevaActualizacion-{{ pt.proyecto.pk }}">
+                                                    Cancelar
+                                                </button>
+                                                <button type="submit" class="btn btn-custom-primary">
+                                                    Guardar Actualización
+                                                </button>
+                                            </div>
+                                        </form>
+                                    </div>
                                 </div>
-                                <div>{{ actualizacion.contenido|safe }}</div>
                             </div>
-                        {% empty %}
-                            <div class="text-muted small">
-                                <i class="fas fa-info-circle me-1"></i>
-                                No hay actualizaciones registradas
-                            </div>
-                        {% endfor %}
+                            
+                            {% for actualizacion in pt.proyecto.actualizaciones.all %}
+                                <div class="actualizacion-item mb-3 p-3 border-bottom" id="actualizacion-{{ actualizacion.pk }}">
+                                    <div class="d-flex justify-content-between align-items-start">
+                                        <div>
+                                            <strong>{{ actualizacion.autor.get_full_name }}</strong>
+                                            <small class="text-muted ms-2">
+                                                {{ actualizacion.fecha|date:"d/m/Y H:i" }}
+                                            </small>
+                                        </div>
+                                        {% if user.perfil.es_diputada or actualizacion.autor == user %}
+                                            <div class="btn-group">
+                                                <button type="button" class="btn btn-sm btn-outline-primary edit-button" 
+                                                        id="edit-button-{{ actualizacion.pk }}"
+                                                        data-update-id="{{ actualizacion.pk }}">
+                                                    <i class="fas fa-edit"></i>
+                                                </button>
+                                                <form method="post" action="{% url 'proyectos:eliminar_actualizacion' actualizacion.pk %}?from=temario&temario_id={{ temario.pk }}"
+                                                      class="d-inline delete-form">
+                                                    {% csrf_token %}
+                                                    <button type="submit" class="btn btn-sm btn-outline-danger">
+                                                        <i class="fas fa-trash"></i>
+                                                    </button>
+                                                </form>
+                                            </div>
+                                        {% endif %}
+                                    </div>
+                                    <div class="mt-2" id="update-content-{{ actualizacion.pk }}">
+                                        {{ actualizacion.contenido|safe }}
+                                    </div>
+                                    <form method="post" action="{% url 'proyectos:editar_actualizacion' actualizacion.pk %}" 
+                                          class="editor-form mt-3" id="edit-form-{{ actualizacion.pk }}" style="display: none;">
+                                        {% csrf_token %}
+                                        <div class="form-group">
+                                            <textarea name="contenido" id="id_contenido_{{ actualizacion.pk }}" 
+                                                      class="form-control">{{ actualizacion.contenido|safe }}</textarea>
+                                        </div>
+                                        <div class="d-flex justify-content-end mt-2">
+                                            <button type="button" class="btn btn-secondary me-2 cancel-button" 
+                                                    id="cancel-button-{{ actualizacion.pk }}"
+                                                    data-update-id="{{ actualizacion.pk }}">
+                                                <i class="fas fa-times"></i> Cancelar
+                                            </button>
+                                            <button type="submit" class="btn btn-custom-primary save-button" 
+                                                    id="save-button-{{ actualizacion.pk }}"
+                                                    data-update-id="{{ actualizacion.pk }}">
+                                                <i class="fas fa-save"></i> Guardar
+                                            </button>
+                                        </div>
+                                    </form>
+                                </div>
+                            {% empty %}
+                                <p class="text-muted text-center">No hay actualizaciones aún para este proyecto.</p>
+                            {% endfor %}
+                        </div>
                     </div>
                 </div>
             </div>
@@ -203,8 +287,351 @@
     }
     
     .estado-pendiente { background-color: #6c757d; }
-    .estado-tratandose { background-color: #ffc107; color: #212529; }
+    .estado-tratandose { background-color: #5768ff; color: #212529; }
     .estado-aprobado { background-color: #28a745; }
     .estado-desaprobado { background-color: #dc3545; }
+    
+    /* Estados actualizados:
+    Pendiente - estado-pendiente 
+    Archivo - estado-tratandose
+    Despacho - estado-aprobado
+    En cartera - estado-desaprobado */
 </style>
-{% endblock %} 
+
+{% endblock %}
+
+
+
+{% block extra_js %}
+<script>
+// Variable global para el temario actual
+const TEMARIO_ID = {{ temario.pk }};
+
+// Configuración unificada de CKEditor
+const ckeditorConfig = {
+    toolbar: 'full',
+    height: 300,
+    width: '100%',
+    extraPlugins: 'font,justify,colorbutton,find,preview,tableresize,uploadimage',
+    allowedContent: true,
+    fontSize_sizes: '8/8px;9/9px;10/10px;11/11px;12/12px;14/14px;16/16px;18/18px;20/20px;22/22px;24/24px;26/26px;28/28px;36/36px;48/48px;72/72px',
+    font_names: 'Arial/Arial, Helvetica, sans-serif;Times New Roman/Times New Roman, Times, serif;Verdana/Verdana, Geneva, sans-serif',
+    toolbar_full: [
+        ['Styles', 'Format', 'Bold', 'Italic', 'Underline', 'Strike', 'SpellChecker', 'Undo', 'Redo'],
+        ['Link', 'Unlink', 'Anchor'],
+        ['Image', 'Flash', 'Table', 'HorizontalRule'],
+        ['TextColor', 'BGColor'],
+        ['Smiley', 'SpecialChar'],
+        ['Source'],
+        ['JustifyLeft','JustifyCenter','JustifyRight','JustifyBlock'],
+        ['NumberedList','BulletedList'],
+        ['Indent','Outdent'],
+        ['Maximize'],
+    ],
+    removePlugins: 'exportpdf,elementspath,resize',
+    removeButtons: '',
+    contentsCss: ['/static/ckeditor/ckeditor/contents.css'],
+    stylesSet: [],
+    format_tags: 'p;h1;h2;h3;pre',
+    skin: 'moono-lisa',
+    toolbarCanCollapse: true,
+    toolbarStartupExpanded: true,
+    tabSpaces: 4,
+    forcePasteAsPlainText: true,
+    enterMode: CKEDITOR.ENTER_BR
+};
+
+document.addEventListener('DOMContentLoaded', function() {
+    // Inicializar CKEditor para todos los formularios de NUEVA actualización
+    document.querySelectorAll('.editor-create').forEach(function(textarea) {
+        if (!CKEDITOR.instances[textarea.id]) {
+            CKEDITOR.replace(textarea.id, ckeditorConfig);
+        }
+    });
+
+    // Inicializar CKEditor para todos los formularios de EDICIÓN iniciales
+    document.querySelectorAll('.editor-form textarea').forEach(function(textarea) {
+        if (!CKEDITOR.instances[textarea.id]) {
+            CKEDITOR.replace(textarea.id, ckeditorConfig);
+        }
+    });
+
+    // Manejar formularios de creación de actualización por AJAX
+    document.querySelectorAll('.create-update-form').forEach(function(form) {
+        form.addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const scrollPos = window.scrollY;
+            const formData = new FormData(this);
+            
+            // Agregar temario_id para que la vista sepa de dónde viene la solicitud
+            formData.append('temario_id', TEMARIO_ID);
+            
+            // Obtener el ID del proyecto desde el ID del formulario "create-form-XX"
+            const projectId = this.id.replace('create-form-', '');
+            const editorId = 'id_contenido_create_' + projectId;
+            const editor = CKEDITOR.instances[editorId];
+            
+            if (editor) {
+                formData.set('contenido', editor.getData());
+            }
+
+            fetch(this.action, {
+                method: 'POST',
+                body: formData,
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    // Limpiar el editor
+                    if (editor) {
+                        editor.setData('');
+                    }
+                    
+                    // Obtener la caja colapsable
+                    const collapseElement = form.closest('.collapse');
+                    const updatesList = collapseElement.parentNode; // El outer card-body
+                    
+                    // Cerrar el formulario con Bootstrap de forma segura
+                    const bsCollapse = bootstrap.Collapse.getInstance(collapseElement);
+                    if (bsCollapse) {
+                        bsCollapse.hide();
+                    } else {
+                        new bootstrap.Collapse(collapseElement).hide();
+                    }
+                    
+                    // Agregar la nueva actualización al contenedor
+                    const tempDiv = document.createElement('div');
+                    tempDiv.innerHTML = data.html;
+                    const newUpdate = tempDiv.firstElementChild;
+                    
+                    // Remover mensaje de "No hay actualizaciones" si existe
+                    const emptyMsg = updatesList.querySelector('p.text-muted.text-center');
+                    if (emptyMsg) {
+                        emptyMsg.remove();
+                    }
+                    
+                    // Encontrar el primer elemento de actualizacion para insertar ANTES de él
+                    const firstUpdate = updatesList.querySelector('.actualizacion-item');
+                    
+                    if (firstUpdate && firstUpdate.parentNode === updatesList) {
+                        updatesList.insertBefore(newUpdate, firstUpdate);
+                    } else {
+                        updatesList.appendChild(newUpdate);
+                    }
+                    
+                    // Re-inicializar los event listeners para el nuevo elemento (editar/borrar)
+                    initializeUpdateHandlers();
+                    
+                    // Inicializar el nuevo CKEditor de edición inyectado
+                    const newTextarea = newUpdate.querySelector('.editor-form textarea');
+                    if (newTextarea && !CKEDITOR.instances[newTextarea.id]) {
+                        CKEDITOR.replace(newTextarea.id, ckeditorConfig);
+                    }
+                    
+                    // Restaurar el scroll al lugar original
+                    requestAnimationFrame(() => {
+                        requestAnimationFrame(() => {
+                            window.scrollTo(0, scrollPos);
+                        });
+                    });
+                    
+                    // Mostrar alerta de éxito
+                    const alertDiv = document.createElement('div');
+                    alertDiv.className = 'alert alert-success alert-dismissible fade show';
+                    alertDiv.innerHTML = `
+                        ${data.message}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                    `;
+                    form.closest('.card').insertBefore(alertDiv, form);
+                    
+                    setTimeout(() => alertDiv.remove(), 3000);
+                } else {
+                    const alertDiv = document.createElement('div');
+                    alertDiv.className = 'alert alert-danger alert-dismissible fade show';
+                    alertDiv.innerHTML = `
+                        ${data.message || 'Error en la solicitud'}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                    `;
+                    form.closest('.card').insertBefore(alertDiv, form);
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                const alertDiv = document.createElement('div');
+                alertDiv.className = 'alert alert-danger alert-dismissible fade show';
+                alertDiv.innerHTML = `
+                    Error al agregar la actualización.
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                `;
+                form.closest('.card').insertBefore(alertDiv, form);
+            });
+        });
+    });
+
+    // Función para inicializar o reinicializar handlers de edición/eliminación
+    function initializeUpdateHandlers() {
+        // Función para manejar la edición de actualizaciones
+        function handleEditUpdate(updateId) {
+            const updateContent = document.querySelector(`#update-content-${updateId}`);
+            const editForm = document.querySelector(`#edit-form-${updateId}`);
+            const editButton = document.querySelector(`#edit-button-${updateId}`);
+
+            // Ocultar el contenido y mostrar el formulario
+            updateContent.style.display = 'none';
+            editForm.style.display = 'block';
+            editButton.style.display = 'none';
+        }
+
+        // Agregar event listeners a los botones de editar
+        document.querySelectorAll('.edit-button').forEach(function(button) {
+            if (!button.dataset.handlerAttached) {
+                button.addEventListener('click', function() {
+                    const updateId = this.getAttribute('data-update-id');
+                    handleEditUpdate(updateId);
+                });
+                button.dataset.handlerAttached = 'true';
+            }
+        });
+
+        // Agregar event listeners a los botones de cancelar
+        document.querySelectorAll('.cancel-button, [id^="cancel-button-"]').forEach(function(button) {
+            if (!button.dataset.handlerAttached) {
+                button.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    const updateId = this.getAttribute('data-update-id');
+                    const updateContent = document.querySelector(`#update-content-${updateId}`);
+                    const editForm = document.querySelector(`#edit-form-${updateId}`);
+                    const editButton = document.querySelector(`#edit-button-${updateId}`);
+                    const editor = CKEDITOR.instances[`id_contenido_${updateId}`];
+
+                    updateContent.style.display = 'block';
+                    editForm.style.display = 'none';
+                    editButton.style.display = 'block';
+                    
+                    // Restaurar el contenido original en el editor
+                    if (editor) {
+                        editor.setData(updateContent.innerHTML);
+                    }
+                });
+                button.dataset.handlerAttached = 'true';
+            }
+        });
+
+        // Manejar los formularios de edición por AJAX
+        document.querySelectorAll('.editor-form').forEach(function(form) {
+            if (!form.dataset.handlerAttached) {
+                form.addEventListener('submit', function(e) {
+                    e.preventDefault();
+                    const updateId = this.id.replace('edit-form-', '');
+                    const formData = new FormData(this);
+                    const editor = CKEDITOR.instances[`id_contenido_${updateId}`];
+                    
+                    if (editor) {
+                        formData.set('contenido', editor.getData());
+                    }
+
+                    fetch(this.action, {
+                        method: 'POST',
+                        body: formData,
+                        headers: {
+                            'X-Requested-With': 'XMLHttpRequest',
+                            'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+                        }
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            const updateContent = document.querySelector(`#update-content-${updateId}`);
+                            const editForm = document.querySelector(`#edit-form-${updateId}`);
+                            const editButton = document.querySelector(`#edit-button-${updateId}`);
+
+                            updateContent.innerHTML = data.contenido;
+                            updateContent.style.display = 'block';
+                            editForm.style.display = 'none';
+                            editButton.style.display = 'block';
+
+                            const alertDiv = document.createElement('div');
+                            alertDiv.className = 'alert alert-success alert-dismissible fade show';
+                            alertDiv.innerHTML = `
+                                Actualización modificada exitosamente.
+                                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                            `;
+                            form.closest('.card').insertBefore(alertDiv, form);
+                            
+                            setTimeout(() => alertDiv.remove(), 3000);
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error:', error);
+                        const alertDiv = document.createElement('div');
+                        alertDiv.className = 'alert alert-danger alert-dismissible fade show';
+                        alertDiv.innerHTML = `
+                            Error al modificar la actualización.
+                            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                        `;
+                        form.closest('.card').insertBefore(alertDiv, form);
+                        setTimeout(() => alertDiv.remove(), 3000);
+                    });
+                });
+                form.dataset.handlerAttached = 'true';
+            }
+        });
+
+        // Manejar los formularios de eliminación por AJAX
+        document.querySelectorAll('.delete-form').forEach(function(form) {
+            if (!form.dataset.handlerAttached) {
+                form.addEventListener('submit', function(e) {
+                    e.preventDefault();
+                    if (!confirm('¿Estás seguro de que deseas eliminar esta actualización?')) return;
+                    
+                    const scrollPos = window.scrollY;
+                    const formData = new FormData(this);
+                    
+                    // Guardar la referencia al item a borrar ANTES de la petición
+                    const updateItem = this.closest('.actualizacion-item');
+
+                    fetch(this.action, {
+                        method: 'POST',
+                        body: formData,
+                        headers: {
+                            'X-Requested-With': 'XMLHttpRequest',
+                            'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+                        }
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            // Remover el elemento de la lista del DOM (evita recargar)
+                            if (updateItem) {
+                                updateItem.remove();
+                            }
+                            
+                            // Restaurar scroll de forma garantizada
+                            requestAnimationFrame(() => {
+                                window.scrollTo(0, scrollPos);
+                            });
+                        } else {
+                            alert(data.message || 'Error al eliminar la actualización.');
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error:', error);
+                        alert('Error al enviar la solicitud de eliminación.');
+                    });
+                });
+                form.dataset.handlerAttached = 'true';
+            }
+        });
+    }
+
+    // Inicializar handlers en la carga inicial
+    initializeUpdateHandlers();
+});
+</script>
+{% endblock %}
+

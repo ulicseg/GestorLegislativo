@@ -7,7 +7,7 @@
             size: letter;
             margin: 2.5cm;
             @top-center {
-                content: "Temario #{{ temario.numero }} - {{ temario.comision.nombre }}";
+                content: "{{ proyecto.get_tipo_display }} {{ proyecto.numero }} - {{ temario.comision.nombre }}";
                 font-size: 9pt;
             }
             @bottom-right {
@@ -95,25 +95,26 @@
 </head>
 <body>
     <div class="header">
-        <h1>Temario #{{ temario.numero }}</h1>
-        <h2>{{ temario.comision.nombre }}</h2>
+        <h1>{{ proyecto.get_tipo_display }} {{ proyecto.numero }}</h1>
+        <h2>{{ proyecto.titulo }}</h2>
         <div class="meta-info">
-            Creado el {{ temario.fecha_creacion|date:"d/m/Y" }} por {{ temario.creado_por.get_full_name }}
+            Creado el {{ proyecto.fecha_creacion|date:"d/m/Y" }} por {{ proyecto.creado_por.get_full_name }}
+            <br>
+            Comisión: {{ temario.comision.nombre }} - Temario #{{ temario.numero }}
         </div>
     </div>
 
-    {% for pt in proyectos_temario %}
     <div class="proyecto">
         <div class="proyecto-titulo">
-            <h3>{{ pt.orden }}. {{ pt.proyecto.get_tipo_display }} {{ pt.proyecto.numero }} {{ pt.proyecto.titulo }}</h3>
+            <h3>{{ proyecto.get_tipo_display }} {{ proyecto.numero }} {{ proyecto.titulo }}</h3>
         </div>
         <div class="proyecto-descripcion">
-            {{ pt.proyecto.descripcion|safe }}
+            {{ proyecto.descripcion|safe }}
         </div>
-        {% if pt.proyecto.ruta_comisiones.all %}
+        {% if proyecto.ruta_comisiones.all %}
         <div class="ruta-comisiones">
             <h4>Ruta de comisiones:</h4>
-            {% for ruta in pt.proyecto.ruta_comisiones.all|dictsort:"orden" %}
+            {% for ruta in proyecto.ruta_comisiones.all|dictsort:"orden" %}
             <div class="comision-badge estado-{{ ruta.estado }}">
                 <span class="comision-orden">{{ forloop.counter }}</span>
                 {{ ruta.comision.nombre }} ({{ ruta.get_estado_display }})
@@ -123,7 +124,7 @@
         {% endif %}
         <div class="actualizaciones">
             <h4>Últimas actualizaciones:</h4>
-            {% for actualizacion in pt.proyecto.actualizaciones.all %}
+            {% for actualizacion in proyecto.actualizaciones.all %}
             <div class="actualizacion">
                 <div class="meta-info">
                     {{ actualizacion.autor.get_full_name }} - {{ actualizacion.fecha|date:"d/m/Y H:i" }}
@@ -135,6 +136,5 @@
             {% endfor %}
         </div>
     </div>
-    {% endfor %}
 </body>
 </html>

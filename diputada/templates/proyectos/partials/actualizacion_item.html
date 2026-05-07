@@ -1,0 +1,49 @@
+<div class="actualizacion-item mb-3 p-3 border-bottom" id="actualizacion-{{ actualizacion.pk }}">
+    <div class="d-flex justify-content-between align-items-start">
+        <div>
+            <strong>{{ actualizacion.autor.get_full_name }}</strong>
+            <small class="text-muted ms-2">
+                {{ actualizacion.fecha|date:"d/m/Y H:i" }}
+            </small>
+        </div>
+        {% if user.perfil.es_diputada or actualizacion.autor == user %}
+            <div class="btn-group">
+                <button type="button" class="btn btn-sm btn-outline-primary edit-button" 
+                        id="edit-button-{{ actualizacion.pk }}"
+                        data-update-id="{{ actualizacion.pk }}">
+                    <i class="fas fa-edit"></i>
+                </button>
+                <form method="post" action="{% url 'proyectos:eliminar_actualizacion' actualizacion.pk %}{% if temario_id %}?from=temario&temario_id={{ temario_id }}{% endif %}"
+                      class="d-inline delete-form">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-sm btn-outline-danger">
+                        <i class="fas fa-trash"></i>
+                    </button>
+                </form>
+            </div>
+        {% endif %}
+    </div>
+    <div class="mt-2" id="update-content-{{ actualizacion.pk }}">
+        {{ actualizacion.contenido|safe }}
+    </div>
+    <form method="post" action="{% url 'proyectos:editar_actualizacion' actualizacion.pk %}" 
+          class="editor-form mt-3" id="edit-form-{{ actualizacion.pk }}" style="display: none;">
+        {% csrf_token %}
+        <div class="form-group">
+            <textarea name="contenido" id="id_contenido_{{ actualizacion.pk }}" 
+                      class="form-control">{{ actualizacion.contenido|safe }}</textarea>
+        </div>
+        <div class="d-flex justify-content-end mt-2">
+            <button type="button" class="btn btn-secondary me-2 cancel-button" 
+                    id="cancel-button-{{ actualizacion.pk }}"
+                    data-update-id="{{ actualizacion.pk }}">
+                <i class="fas fa-times"></i> Cancelar
+            </button>
+            <button type="submit" class="btn btn-custom-primary save-button" 
+                    id="save-button-{{ actualizacion.pk }}"
+                    data-update-id="{{ actualizacion.pk }}">
+                <i class="fas fa-save"></i> Guardar
+            </button>
+        </div>
+    </form>
+</div>
