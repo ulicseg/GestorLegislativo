@@ -22,7 +22,5 @@ urlpatterns = [
     path('proyectos/<int:proyecto_pk>/pdf/', views.descargar_proyecto_solo_pdf, name='descargar_proyecto_solo_pdf'),
     path('mis-proyectos/', views.mis_proyectos, name='mis_proyectos'),
     path('ruta-comision/<int:ruta_id>/cambiar-estado/', views.cambiar_estado_comision, name='cambiar_estado_comision'),
-    # Removemos las rutas que no estamos usando por ahora
-    # path('actualizacion/<int:pk>/editar/', views.editar_actualizacion, name='editar_actualizacion'),
-    # path('actualizacion/<int:pk>/eliminar/', views.eliminar_actualizacion, name='eliminar_actualizacion'),
+
 ]
