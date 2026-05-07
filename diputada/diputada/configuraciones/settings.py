@@ -12,7 +12,7 @@ https://docs.djangoproject.com/en/5.1/ref/settings/
 
 from pathlib import Path
 import os
-from decouple import config
+from decouple import Csv, config
 
 
 
@@ -24,12 +24,23 @@ BASE_DIR = Path(__file__).resolve().parent.parent.parent
 # See https://docs.djangoproject.com/en/5.1/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = config('SECRET_KEY')
+SECRET_KEY = config('SECRET_KEY', default='django-insecure-y26w!lbz#b(hb)zo-*nae@-w55qz4p8jd*lxenrnnecp0yhe&3')
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = config('DEBUG', default=False, cast=bool)
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = config(
+    'ALLOWED_HOSTS',
+    default='localhost,127.0.0.1,maida.com.ar,www.maida.com.ar,sistemagestorlegislativo.pythonanywhere.com',
+    cast=Csv(),
+)
+
+CSRF_TRUSTED_ORIGINS = config(
+    'CSRF_TRUSTED_ORIGINS',
+    default='https://maida.com.ar,https://www.maida.com.ar',
+    cast=Csv(),
+)
+
 
 
 # Application definition
@@ -88,12 +99,8 @@ WSGI_APPLICATION = 'diputada.wsgi.application'
 
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.mysql',
-        'NAME': config('DATABASE_URL'),
-        'USER': config('DATABASE_USER'),
-        'PASSWORD': config('DATABASE_PASSWORD'),
-        'HOST': config('DATABASE_HOST'),
-        'PORT': config('DATABASE_PORT'),
+        'ENGINE': 'django.db.backends.sqlite3',
+        'NAME': BASE_DIR / 'db.sqlite3',
     }
 }
 
@@ -133,11 +140,14 @@ USE_TZ = True
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/5.1/howto/static-files/
 
-STATIC_URL = 'static/'
-STATICFILES_DIRS = [os.path.join(BASE_DIR, 'static')]
+STATIC_URL = '/static/'
+STATIC_ROOT = config(
+    'STATIC_ROOT',
+    default='/home/sistemagestorlegislativo/GestorLegislativo/diputada/staticfiles/',
+)
 
 MEDIA_URL = '/media/'
-MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
+MEDIA_ROOT = config('MEDIA_ROOT', default=os.path.join(BASE_DIR, 'media'))
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.1/ref/settings/#default-auto-field
@@ -169,9 +179,25 @@ CKEDITOR_CONFIGS = {
             ['Indent','Outdent'],
             ['Maximize'],
         ],
+        'removePlugins': 'exportpdf',
+        'removeButtons': '',
+        'contentsCss': ['/static/ckeditor/ckeditor/contents.css'],
+        'stylesSet': [],
+        'format_tags': 'p;h1;h2;h3;pre',
+        'skin': 'moono-lisa',
+        'toolbarCanCollapse': True,
+        'toolbarStartupExpanded': True,
+        'tabSpaces': 4,
+        'forcePasteAsPlainText': True,
+        'enterMode': 2,  # CKEDITOR.ENTER_BR
+        'version': '4.25.1'  # Especificar la versión más reciente
     }
 }
 
 # Configuración para upload de imágenes en CKEditor
 CKEDITOR_UPLOAD_PATH = "uploads/"
 CKEDITOR_IMAGE_BACKEND = "pillow"
+CKEDITOR_JQUERY_URL = '//ajax.googleapis.com/ajax/libs/jquery/3.7.1/jquery.min.js'
+CKEDITOR_RESTRICT_BY_USER = True
+CKEDITOR_BROWSE_SHOW_DIRS = True
+CKEDITOR_ALLOW_NONIMAGE_FILES = False  # Solo permitir imágenes por seguridad
