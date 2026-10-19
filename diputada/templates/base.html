@@ -518,12 +518,19 @@
                             </a>
                         </li>
 
+                        <li class="nav-item ms-2">
+                               <a class="nav-link {% if section == 'sancionados' %}active{% endif %}" 
+                                   href="/proyectos/sancionados/">
+                                <i class="fas fa-gavel me-1"></i>Proyectos Sancionados
+                            </a>
+                        </li>
+
                         <!-- Mis Proyectos / Proyectos Diputada -->
                         {% if user.perfil.es_diputada %}
                             <li class="nav-item ms-2">
                                 <a class="nav-link {% if section == 'mis_proyectos' %}active{% endif %}" 
                                    href="{% url 'proyectos:mis_proyectos' %}">
-                                    <i class="fas fa-file-signature me-1"></i>Mis Proyectos
+                                    <i class="fas fa-file-signature me-1"></i>Proyectos Diputada
                                 </a>
                             </li>
                         {% else %}

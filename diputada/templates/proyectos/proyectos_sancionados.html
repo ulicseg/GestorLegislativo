@@ -1,0 +1,172 @@
+{% extends 'base.html' %}
+
+{% block title %}Proyectos Sancionados{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h4 class="mb-0">
+        <i class="fas fa-gavel me-2"></i>Proyectos Sancionados
+    </h4>
+</div>
+
+<div class="card shadow-sm mb-4">
+    <div class="card-body">
+        <form method="get" class="d-flex flex-nowrap align-items-center gap-2 filter-bar">
+            <div class="filter-field filter-field-wide">
+                <div class="input-group">
+                    <span class="input-group-text bg-light">
+                        <i class="fas fa-search text-muted"></i>
+                    </span>
+                    {{ filter_form.busqueda }}
+                </div>
+            </div>
+            <div class="filter-field filter-field-wide">
+                <div class="input-group">
+                    <span class="input-group-text bg-light">
+                        <i class="fas fa-hashtag text-muted"></i>
+                    </span>
+                    {{ filter_form.numero }}
+                </div>
+            </div>
+            <div class="filter-field filter-field-wide">
+                <div class="input-group">
+                    <span class="input-group-text bg-light">
+                        <i class="fas fa-tag text-muted"></i>
+                    </span>
+                    {{ filter_form.categoria }}
+                </div>
+            </div>
+            <div class="filter-field filter-field-button">
+                <button type="submit" class="btn btn-primary px-4">
+                    Filtrar
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div class="row">
+    {% for proyecto in proyectos %}
+        <div class="col-md-6 mb-4">
+            <div class="card mb-4 shadow-sm border-success">
+                <div class="card-header d-flex justify-content-between align-items-start">
+                    <div>
+                        <h5 class="mb-1">
+                            {{ proyecto.get_tipo_display }}
+                            <span class="proyecto-numero">{{ proyecto.numero }}</span>
+                            {{ proyecto.titulo }}
+                        </h5>
+                        <span class="badge bg-success">
+                            Sancionado
+                        </span>
+                    </div>
+                    <span class="badge" style="background-color: #965a0091;">
+                        {{ proyecto.categoria.nombre|truncatechars:40 }}
+                    </span>
+                </div>
+                <div class="card-body">
+                    <p class="card-text text-muted">{{ proyecto.descripcion|safe|truncatewords_html:20 }}</p>
+
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div class="text-muted small">
+                            <i class="fas fa-user me-1"></i>{{ proyecto.creado_por.get_full_name }}
+                            <br>
+                            <i class="fas fa-calendar me-1"></i>{{ proyecto.fecha_creacion|date:"d/m/Y H:i" }}
+                        </div>
+                        <div class="btn-group">
+                            <a href="{% url 'proyectos:detalle_proyecto' proyecto.pk %}?from=sancionados" class="btn btn-primary btn-sm">
+                                <i class="fas fa-eye me-1"></i>Ver detalles
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    {% empty %}
+        <div class="col-12">
+            <div class="alert alert-info text-center">
+                <i class="fas fa-info-circle me-2"></i>No hay proyectos sancionados.
+            </div>
+        </div>
+    {% endfor %}
+</div>
+
+{% if proyectos.has_other_pages %}
+<nav aria-label="Navegación de páginas" class="mt-4">
+    <ul class="pagination justify-content-center">
+        {% if proyectos.has_previous %}
+            <li class="page-item">
+                <a class="page-link" href="?page={{ proyectos.previous_page_number }}{% if request.GET.busqueda %}&busqueda={{ request.GET.busqueda }}{% endif %}{% if request.GET.numero %}&numero={{ request.GET.numero }}{% endif %}{% if request.GET.categoria %}&categoria={{ request.GET.categoria }}{% endif %}">
+                    <i class="fas fa-chevron-left"></i>
+                </a>
+            </li>
+        {% else %}
+            <li class="page-item disabled">
+                <span class="page-link"><i class="fas fa-chevron-left"></i></span>
+            </li>
+        {% endif %}
+
+        {% for i in page_range %}
+            {% if i == '...' %}
+                <li class="page-item disabled"><span class="page-link">…</span></li>
+            {% elif i == proyectos.number %}
+                <li class="page-item active"><span class="page-link">{{ i }}</span></li>
+            {% else %}
+                <li class="page-item">
+                    <a class="page-link" href="?page={{ i }}{% if request.GET.busqueda %}&busqueda={{ request.GET.busqueda }}{% endif %}{% if request.GET.numero %}&numero={{ request.GET.numero }}{% endif %}{% if request.GET.categoria %}&categoria={{ request.GET.categoria }}{% endif %}">{{ i }}</a>
+                </li>
+            {% endif %}
+        {% endfor %}
+
+        {% if proyectos.has_next %}
+            <li class="page-item">
+                <a class="page-link" href="?page={{ proyectos.next_page_number }}{% if request.GET.busqueda %}&busqueda={{ request.GET.busqueda }}{% endif %}{% if request.GET.numero %}&numero={{ request.GET.numero }}{% endif %}{% if request.GET.categoria %}&categoria={{ request.GET.categoria }}{% endif %}">
+                    <i class="fas fa-chevron-right"></i>
+                </a>
+            </li>
+        {% else %}
+            <li class="page-item disabled">
+                <span class="page-link"><i class="fas fa-chevron-right"></i></span>
+            </li>
+        {% endif %}
+    </ul>
+</nav>
+{% endif %}
+
+<style>
+    .filter-bar {
+        overflow-x: auto;
+    }
+
+    .filter-field {
+        flex: 0 1 auto;
+        min-width: 0;
+    }
+
+    .filter-field-wide {
+        flex-basis: 260px;
+    }
+
+    .filter-field-button {
+        flex-basis: 120px;
+    }
+
+    .filter-field .input-group {
+        flex-wrap: nowrap;
+    }
+
+    .filter-field .form-control,
+    .filter-field .form-select {
+        min-width: 0;
+    }
+
+    .proyecto-numero {
+        background-color: rgba(21, 54, 100, 0.15);
+        color: #153664;
+        padding: 2px 8px;
+        border-radius: 4px;
+        font-weight: bold;
+        display: inline-block;
+    }
+</style>
+{% endblock %}

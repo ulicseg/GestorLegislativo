@@ -9,7 +9,7 @@ urlpatterns = [
     path('adminsupersecreto/', admin.site.urls),
     path('', TemplateView.as_view(template_name='index.html'), name='index'),
     path('usuario/', include('apps.usuario.urls')),
-    path('proyectos/', include('apps.proyectos.urls')),
+    path('proyectos/', include('apps.proyectos.urls', namespace='proyectos')),
     path('ckeditor/', include('ckeditor_uploader.urls')),
 ]
 

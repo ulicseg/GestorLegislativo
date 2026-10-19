@@ -22,8 +22,8 @@
 <!-- Filtros -->
 <div class="card shadow-sm mb-4">
     <div class="card-body">
-        <form method="get" class="row g-3">
-            <div class="col-md-4">
+        <form method="get" class="d-flex flex-nowrap align-items-center gap-2 filter-bar">
+            <div class="filter-field filter-field-wide">
                 <div class="input-group">
                     <span class="input-group-text bg-light">
                         <i class="fas fa-search text-muted"></i>
@@ -31,7 +31,7 @@
                     {{ filter_form.busqueda }}
                 </div>
             </div>
-            <div class="col-md-3">
+            <div class="filter-field filter-field-wide">
                 <div class="input-group">
                     <span class="input-group-text bg-light">
                         <i class="fas fa-hashtag text-muted"></i>
@@ -39,18 +39,26 @@
                     {{ filter_form.numero }}
                 </div>
             </div>
-            {% if user.perfil.es_diputada %}
-                <div class="col-md-3">
-                    <div class="input-group">
-                        <span class="input-group-text bg-light">
-                            <i class="fas fa-tag text-muted"></i>
-                        </span>
-                        {{ filter_form.categoria }}
+            <div class="filter-field filter-field-wide">
+                <div class="input-group">
+                    <span class="input-group-text bg-light">
+                        <i class="fas fa-tag text-muted"></i>
+                    </span>
+                    {{ filter_form.categoria }}
+                </div>
+            </div>
+            {% if not user.perfil.es_diputada %}
+                <div class="filter-field filter-field-check d-flex align-items-center">
+                    <div class="form-check text-nowrap mb-0 d-flex align-items-center">
+                        {{ filter_form.solo_proyectos_diputada }}
+                        <label class="form-check-label ms-1" for="{{ filter_form.solo_proyectos_diputada.id_for_label }}">
+                            {{ filter_form.solo_proyectos_diputada.label }}
+                        </label>
                     </div>
                 </div>
             {% endif %}
-            <div class="col-md-2">
-                <button type="submit" class="btn btn-primary w-100">
+            <div class="filter-field filter-field-button">
+                <button type="submit" class="btn btn-primary px-4">
                     Filtrar
                 </button>
             </div>
@@ -74,7 +82,7 @@
                     </span>
                 </div>
                 <div class="card-body">
-                    <p class="card-text text-muted">{{ proyecto.descripcion|striptags|truncatewords:20 }}</p>
+                    <p class="card-text text-muted">{{ proyecto.descripcion|safe|truncatewords_html:20 }}</p>
                     
                     <!-- Indicador visual de ruta de comisiones -->
                     {% if proyecto.ruta_comisiones.all %}
@@ -88,7 +96,7 @@
                                          data-bs-placement="top" 
                                          title="{{ ruta.comision.nombre }} - {{ ruta.get_estado_display }}"
                                          style="background-color: 
-                                            {% if ruta.estado == 'aprobado' %}#28a745{% elif ruta.estado == 'tratandose' %}#ffc107{% elif ruta.estado == 'desaprobado' %}#dc3545{% else %}#6c757d{% endif %};">
+                                            {% if ruta.estado == 'aprobado' %}#28a745{% elif ruta.estado == 'tratandose' %}#007bff{% elif ruta.estado == 'desaprobado' %}#dc3545{% else %}#6c757d{% endif %};">
                                         {{ ruta.comision.nombre|truncatechars:8 }}
                                     </div>
                                 {% endfor %}
@@ -132,7 +140,7 @@
     <ul class="pagination justify-content-center">
         {% if proyectos.has_previous %}
             <li class="page-item">
-                <a class="page-link" href="?page={{ proyectos.previous_page_number }}{% if request.GET.busqueda %}&busqueda={{ request.GET.busqueda }}{% endif %}{% if request.GET.numero %}&numero={{ request.GET.numero }}{% endif %}{% if request.GET.categoria %}&categoria={{ request.GET.categoria }}{% endif %}">
+                <a class="page-link" href="?page={{ proyectos.previous_page_number }}{% if request.GET.busqueda %}&busqueda={{ request.GET.busqueda }}{% endif %}{% if request.GET.numero %}&numero={{ request.GET.numero }}{% endif %}{% if request.GET.categoria %}&categoria={{ request.GET.categoria }}{% endif %}{% if request.GET.solo_proyectos_diputada %}&solo_proyectos_diputada=on{% endif %}">
                     <i class="fas fa-chevron-left"></i>
                 </a>
             </li>
@@ -142,23 +150,25 @@
                     <i class="fas fa-chevron-left"></i>
                 </span>
             </li>
-        {% endif %}
-
-        {% for i in proyectos.paginator.page_range %}
-            {% if proyectos.number == i %}
+        {% endif %}        {% for i in page_range %}
+            {% if i == '...' %}
+                <li class="page-item disabled">
+                    <span class="page-link">…</span>
+                </li>
+            {% elif i == proyectos.number %}
                 <li class="page-item active">
                     <span class="page-link">{{ i }}</span>
                 </li>
             {% else %}
                 <li class="page-item">
-                    <a class="page-link" href="?page={{ i }}{% if request.GET.busqueda %}&busqueda={{ request.GET.busqueda }}{% endif %}{% if request.GET.numero %}&numero={{ request.GET.numero }}{% endif %}{% if request.GET.categoria %}&categoria={{ request.GET.categoria }}{% endif %}">{{ i }}</a>
+                    <a class="page-link" href="?page={{ i }}{% if request.GET.busqueda %}&busqueda={{ request.GET.busqueda }}{% endif %}{% if request.GET.numero %}&numero={{ request.GET.numero }}{% endif %}{% if request.GET.categoria %}&categoria={{ request.GET.categoria }}{% endif %}{% if request.GET.solo_proyectos_diputada %}&solo_proyectos_diputada=on{% endif %}">{{ i }}</a>
                 </li>
             {% endif %}
         {% endfor %}
 
         {% if proyectos.has_next %}
             <li class="page-item">
-                <a class="page-link" href="?page={{ proyectos.next_page_number }}{% if request.GET.busqueda %}&busqueda={{ request.GET.busqueda }}{% endif %}{% if request.GET.numero %}&numero={{ request.GET.numero }}{% endif %}{% if request.GET.categoria %}&categoria={{ request.GET.categoria }}{% endif %}">
+                <a class="page-link" href="?page={{ proyectos.next_page_number }}{% if request.GET.busqueda %}&busqueda={{ request.GET.busqueda }}{% endif %}{% if request.GET.numero %}&numero={{ request.GET.numero }}{% endif %}{% if request.GET.categoria %}&categoria={{ request.GET.categoria }}{% endif %}{% if request.GET.solo_proyectos_diputada %}&solo_proyectos_diputada=on{% endif %}">
                     <i class="fas fa-chevron-right"></i>
                 </a>
             </li>
@@ -175,6 +185,36 @@
 
 <!-- Estilos para el proyecto -->
 <style>
+    .filter-bar {
+        overflow-x: auto;
+    }
+
+    .filter-field {
+        flex: 0 1 auto;
+        min-width: 0;
+    }
+
+    .filter-field-wide {
+        flex-basis: 260px;
+    }
+
+    .filter-field-check {
+        flex-basis: 240px;
+    }
+
+    .filter-field-button {
+        flex-basis: 120px;
+    }
+
+    .filter-field .input-group {
+        flex-wrap: nowrap;
+    }
+
+    .filter-field .form-control,
+    .filter-field .form-select {
+        min-width: 0;
+    }
+
     .proyecto-numero {
         background-color: rgba(21, 54, 100, 0.15);
         color: #153664;

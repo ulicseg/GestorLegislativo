@@ -82,9 +82,15 @@
             font-weight: bold;
         }
         .estado-pendiente { background-color: #6c757d; }
-        .estado-tratandose { background-color: #ffc107; color: #212529; }
+        .estado-tratandose { background-color: #007bff; color: white; }
         .estado-aprobado { background-color: #28a745; }
         .estado-desaprobado { background-color: #dc3545; }
+        
+        /* Estados actualizados:
+        Pendiente - estado-pendiente 
+        Archivo - estado-tratandose
+        Despacho - estado-aprobado
+        En cartera - estado-desaprobado */
     </style>
 </head>
 <body>
@@ -131,4 +137,4 @@
     </div>
     {% endfor %}
 </body>
-</html> 
+</html>

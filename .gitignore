@@ -47,9 +47,14 @@ Thumbs.db
 .env
 env/
 
-# Migrations
-*/migrations/*
 
 # Python
 *.pyc
 __pycache__/
+
+# Estáticos generados (collectstatic) y respaldos
+staticfiles/
+*.zip
+db.sqlite3.bak*
+db_snapshot*
+CONTEXTO_SISTEMA_IA.md
