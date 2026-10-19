@@ -511,10 +511,7 @@ def toggle_sancionado(request, pk):
 
     proyecto = get_object_or_404(Proyecto, pk=pk)
 
-    if not (request.user.perfil.es_diputada or request.user == proyecto.creado_por):
-        messages.error(request, 'No tienes permisos para cambiar el estado de sanción de este proyecto.')
-        return redirect('proyectos:detalle_proyecto', pk=pk)
-
+    # Cualquier usuario autenticado puede sancionar o quitar la sanción.
     proyecto.es_sancionado = not proyecto.es_sancionado
     proyecto.save(update_fields=['es_sancionado'])
 

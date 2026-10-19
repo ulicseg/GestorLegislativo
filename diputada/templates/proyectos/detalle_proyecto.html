@@ -32,20 +32,20 @@
                        class="btn btn-warning btn-sm">
                         <i class="fas fa-edit me-1"></i>Editar
                     </a>
-                    <form method="post" action="{% url 'proyectos:toggle_sancionado' proyecto.pk %}" class="d-inline">
-                        {% csrf_token %}
-                        <input type="hidden" name="from" value="{% if from_mis_proyectos %}mis_proyectos{% elif from_sancionados %}sancionados{% endif %}">
-                        {% if proyecto.es_sancionado %}
-                            <button type="submit" class="btn btn-outline-secondary btn-sm">
-                                <i class="fas fa-undo me-1"></i>Quitar sanción
-                            </button>
-                        {% else %}
-                            <button type="submit" class="btn btn-success btn-sm">
-                                <i class="fas fa-gavel me-1"></i>Marcar como sancionado
-                            </button>
-                        {% endif %}
-                    </form>
                 {% endif %}
+                <form method="post" action="{% url 'proyectos:toggle_sancionado' proyecto.pk %}" class="d-inline">
+                    {% csrf_token %}
+                    <input type="hidden" name="from" value="{% if from_mis_proyectos %}mis_proyectos{% elif from_sancionados %}sancionados{% endif %}">
+                    {% if proyecto.es_sancionado %}
+                        <button type="submit" class="btn btn-outline-secondary btn-sm">
+                            <i class="fas fa-undo me-1"></i>Quitar sanción
+                        </button>
+                    {% else %}
+                        <button type="submit" class="btn btn-success btn-sm">
+                            <i class="fas fa-gavel me-1"></i>Marcar como sancionado
+                        </button>
+                    {% endif %}
+                </form>
                 {% if user == proyecto.creado_por or user.perfil.categoria == proyecto.categoria %}
                     <button class="btn btn-danger btn-sm" 
                             type="button" data-bs-toggle="modal" data-bs-target="#confirmDeleteModal">
