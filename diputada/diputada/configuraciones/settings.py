@@ -67,6 +67,8 @@ MIDDLEWARE = [
     'diputada.middleware.SessionExpiryMiddleware',
 ]
 
+LOGIN_URL = 'usuario:login'
+
 ROOT_URLCONF = 'diputada.urls'
 
 TEMPLATES = [

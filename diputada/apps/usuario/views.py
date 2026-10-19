@@ -8,6 +8,7 @@ from .models import Perfil
 from .forms import AsesorCreationForm, DiputadaCreationForm, CategoriaForm
 from django.views.decorators.csrf import csrf_protect
 from django.db import transaction
+from django.utils.http import url_has_allowed_host_and_scheme
 
 def es_diputada(user):
     return user.is_superuser or (hasattr(user, 'perfil') and user.perfil.es_diputada)
@@ -153,6 +154,11 @@ def login_view(request):
         if user is not None:
             login(request, user)
             messages.success(request, f'Bienvenido/a {user.get_full_name() or user.username}!')
+            next_url = request.GET.get('next', '')
+            if next_url and url_has_allowed_host_and_scheme(
+                next_url, allowed_hosts={request.get_host()}, require_https=request.is_secure()
+            ):
+                return redirect(next_url)
             return redirect('index')
         else:
             messages.error(request, 'Usuario o contraseña incorrectos.')

@@ -579,11 +579,8 @@ def editar_actualizacion(request, pk):
     actualizacion = get_object_or_404(Actualizacion, pk=pk)
     proyecto = actualizacion.proyecto
 
-    # Verificar permisos
-    if not request.user.perfil.es_diputada and (
-        proyecto.categoria != request.user.perfil.categoria or
-        actualizacion.autor != request.user
-    ):
+    # Verificar permisos: la diputada o el autor de la actualización
+    if not (request.user.perfil.es_diputada or actualizacion.autor == request.user):
         if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
             return JsonResponse({
                 'success': False,
