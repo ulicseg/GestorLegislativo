@@ -3,7 +3,7 @@ from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin
 from django.contrib.auth.models import User
 from django.contrib.auth.forms import UserCreationForm
-from .models import Perfil
+from .models import Perfil, usuario_tiene_historial
 
 class CustomUserCreationForm(UserCreationForm):
     categoria = forms.ModelChoiceField(
@@ -84,7 +84,11 @@ class CustomUserAdmin(UserAdmin):
 
     def has_delete_permission(self, request, obj=None):
         # Solo el superuser y la diputada pueden eliminar usuarios
-        return request.user.is_superuser or (hasattr(request.user, 'perfil') and request.user.perfil.es_diputada)
+        puede = request.user.is_superuser or (hasattr(request.user, 'perfil') and request.user.perfil.es_diputada)
+        # Un usuario con historial no se borra: se desactiva (is_active) para conservar la trazabilidad
+        if puede and obj is not None and isinstance(obj, User) and usuario_tiene_historial(obj):
+            return False
+        return puede
 
 # Re-registrar UserAdmin
 admin.site.unregister(User)
