@@ -25,9 +25,9 @@
         body {
             background-color: #f2f6fc;
             color: var(--dark-gray);
-            padding-bottom: 60px; /* Espacio para el footer */
             min-height: 100vh;
-            position: relative;
+            display: flex;
+            flex-direction: column; /* El footer queda al final del contenido, sin tapar nada */
         }
 
         .navbar {
@@ -623,8 +623,7 @@
     </div>
 
     <!-- Footer sutil -->
-    <footer class="position-fixed bottom-0 start-50 translate-x-50 py-2 text-center" 
-            style="background: rgba(255,255,255,0.9); transform: translateX(-50%); width: 100%; z-index: 1000;">
+    <footer class="py-3 text-center mt-auto">
         <small class="text-muted" style="font-size: 0.8rem;">
             © 2025 · Desarrollado por Ulises Gutierrez · <a href="https://wa.me/+543725471779" class="text-decoration-none text-muted" target="_blank" rel="noopener noreferrer">3725-471779</a>
         </small>

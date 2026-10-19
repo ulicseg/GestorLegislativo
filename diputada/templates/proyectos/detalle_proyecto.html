@@ -7,9 +7,9 @@
 <div class="card shadow-sm mb-4">
     <!-- Encabezado del proyecto -->
     <div class="card-header bg-light">
-        <div class="d-flex justify-content-between align-items-center">
+        <div>
             <div>
-                <h4 class="mb-1">
+                <h4 class="mb-2 fs-5 lh-base">
                     {{ proyecto.get_tipo_display }} 
                     <span class="proyecto-numero">{{ proyecto.numero }}</span> 
                     {{ proyecto.titulo }}
@@ -26,7 +26,7 @@
                     </span>
                 </div>
             </div>
-            <div class="d-flex gap-2">
+            <div class="d-flex flex-wrap gap-2 mt-3">
                 {% if user.perfil.es_diputada or user == proyecto.creado_por %}
                     <a href="{% url 'proyectos:editar_proyecto' proyecto.pk %}{% if from_mis_proyectos %}?from=mis_proyectos{% elif from_sancionados %}?from=sancionados{% endif %}" 
                        class="btn btn-warning btn-sm">
@@ -70,9 +70,11 @@
             {{ proyecto.descripcion|safe }}
         </div>
     </div>
+</div>
 
-    <!-- Ruta de Comisiones -->
-    <div class="card shadow-sm mt-4">
+<!-- Ruta de Comisiones -->
+<div>
+    <div class="card shadow-sm">
         <div class="card-header">
             <h5 class="mb-0">
                 <i class="fas fa-route me-2"></i>Ruta de Comisiones
@@ -210,7 +212,7 @@
     </div>
 
     <!-- Sección de Actualizaciones -->
-    <div class="card shadow-sm mt-4">
+    <div class="card shadow-sm">
         <div class="card-header">
             <h5 class="mb-0">
                 <i class="fas fa-history me-2"></i>Actualizaciones
@@ -336,18 +338,7 @@
         display: flex;
         min-width: 100%;
         position: relative;
-        padding: 30px 10px 20px;
-    }
-
-    .ruta-comisiones-timeline::before {
-        content: '';
-        position: absolute;
-        top: 60px;
-        left: 40px;
-        right: 40px;
-        height: 4px;
-        background: #e9ecef;
-        z-index: 1;
+        padding: 10px 10px 10px;
     }
 
     .ruta-step {
