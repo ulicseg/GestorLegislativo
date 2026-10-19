@@ -122,6 +122,40 @@
             margin-bottom: 1.5rem;
         }
 
+        /* Tarjetas de proyecto en los listados: misma altura por fila, botones alineados abajo */
+        .proyecto-card {
+            height: 100%;
+            margin-bottom: 0;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .proyecto-card .card-body {
+            display: flex;
+            flex-direction: column;
+            flex: 1 1 auto;
+        }
+
+        .proyecto-card .card-footer-row {
+            margin-top: auto;
+            padding-top: 0.75rem;
+        }
+
+        .proyecto-card .card-header .badge {
+            display: inline-block;
+            margin-top: 0.5rem;
+        }
+
+        /* Títulos muy largos: se recortan en el listado (el título completo está en el detalle) */
+        .proyecto-card .titulo-clamp {
+            display: -webkit-box;
+            -webkit-line-clamp: 4;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+            font-size: 1.05rem;
+            line-height: 1.4;
+        }
+
         .card-header {
             background-color: #dddddd;
             border-bottom: 1px solid rgba(0,0,0,0.05);
