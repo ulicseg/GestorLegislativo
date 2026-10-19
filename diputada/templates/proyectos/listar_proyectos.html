@@ -82,7 +82,7 @@
                     </span>
                 </div>
                 <div class="card-body">
-                    <p class="card-text text-muted">{{ proyecto.descripcion|safe|truncatewords_html:20 }}</p>
+                    <div class="card-text text-muted">{{ proyecto.descripcion|safe|truncatewords_html:20 }}</div>
                     
                     <!-- Indicador visual de ruta de comisiones -->
                     {% if proyecto.ruta_comisiones.all %}

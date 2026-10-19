@@ -128,6 +128,35 @@
             margin-bottom: 0;
             display: flex;
             flex-direction: column;
+            border: 1px solid #e3e8ef;
+            transition: box-shadow 0.2s ease, transform 0.2s ease;
+        }
+
+        .proyecto-card:hover {
+            box-shadow: 0 6px 16px rgba(21, 54, 100, 0.12) !important;
+            transform: translateY(-2px);
+        }
+
+        .proyecto-card .card-header {
+            background-color: #e9eef6;
+            border-bottom: 1px solid #dbe3ee;
+        }
+
+        /* Vista previa de la descripción: texto uniforme (el formato original se ve en el detalle) */
+        .proyecto-card .card-text {
+            margin-bottom: 0.75rem;
+        }
+
+        .proyecto-card .card-text,
+        .proyecto-card .card-text * {
+            text-align: left !important;
+            font-weight: 400 !important;
+            font-size: 0.92rem !important;
+            color: #495057 !important;
+        }
+
+        .proyecto-card .card-text p {
+            margin-bottom: 0.4rem;
         }
 
         .proyecto-card .card-body {
@@ -139,6 +168,7 @@
         .proyecto-card .card-footer-row {
             margin-top: auto;
             padding-top: 0.75rem;
+            border-top: 1px solid #eef1f5;
         }
 
         .proyecto-card .card-header .badge {
@@ -659,7 +689,7 @@
     <!-- Footer sutil -->
     <footer class="py-3 text-center mt-auto">
         <small class="text-muted" style="font-size: 0.8rem;">
-            © 2025 · Desarrollado por Ulises Gutierrez · <a href="https://wa.me/+543725471779" class="text-decoration-none text-muted" target="_blank" rel="noopener noreferrer">3725-471779</a>
+            © {% now "Y" %} · Desarrollado por Ulises Gutierrez · <a href="https://wa.me/5493725509285" class="text-decoration-none text-muted" target="_blank" rel="noopener noreferrer">+54 9 3725 50-9285</a>
         </small>
     </footer>
 
