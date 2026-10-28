@@ -27,12 +27,10 @@
                 </div>
             </div>
             <div class="d-flex flex-wrap gap-2 mt-3">
-                {% if user.perfil.es_diputada or user == proyecto.creado_por %}
-                    <a href="{% url 'proyectos:editar_proyecto' proyecto.pk %}{% if from_mis_proyectos %}?from=mis_proyectos{% elif from_sancionados %}?from=sancionados{% endif %}" 
-                       class="btn btn-warning btn-sm">
-                        <i class="fas fa-edit me-1"></i>Editar
-                    </a>
-                {% endif %}
+                <a href="{% url 'proyectos:editar_proyecto' proyecto.pk %}{% if from_mis_proyectos %}?from=mis_proyectos{% elif from_sancionados %}?from=sancionados{% endif %}"
+                   class="btn btn-warning btn-sm">
+                    <i class="fas fa-edit me-1"></i>Editar
+                </a>
                 <form method="post" action="{% url 'proyectos:toggle_sancionado' proyecto.pk %}" class="d-inline">
                     {% csrf_token %}
                     <input type="hidden" name="from" value="{% if from_mis_proyectos %}mis_proyectos{% elif from_sancionados %}sancionados{% endif %}">
@@ -46,9 +44,9 @@
                         </button>
                     {% endif %}
                 </form>
-                {% if user == proyecto.creado_por or user.perfil.categoria == proyecto.categoria %}
-                    <button class="btn btn-danger btn-sm" 
-                            type="button" data-bs-toggle="modal" data-bs-target="#confirmDeleteModal">
+                {% if puede_eliminar %}
+                    <button class="btn btn-danger btn-sm"
+                            type="button" data-bs-toggle="modal" data-bs-target="#eliminarProyecto">
                         <i class="fas fa-trash me-1"></i>Eliminar
                     </button>
                 {% endif %}
@@ -706,7 +704,7 @@
 </style>
 
 <!-- Modales de eliminación (sin cambios) -->
-{% if user == proyecto.creado_por or user.perfil.categoria == proyecto.categoria %}
+{% if puede_eliminar %}
 <div class="modal fade" id="eliminarProyecto" tabindex="-1">
     <div class="modal-dialog">
         <div class="modal-content">
@@ -716,7 +714,7 @@
             </div>
             <div class="modal-body">
                 <p class="mb-0">¿Estás seguro que deseas eliminar este proyecto? Esta acción no se puede deshacer.</p>
-                {% if user.perfil.categoria == proyecto.categoria and user != proyecto.creado_por %}
+                {% if user != proyecto.creado_por %}
                 <p class="text-warning mt-2">
                     <i class="fas fa-exclamation-triangle me-1"></i>
                     Estás eliminando un proyecto de tu comisión creado por otro asesor.

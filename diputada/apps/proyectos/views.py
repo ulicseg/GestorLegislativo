@@ -433,6 +433,7 @@ def detalle_proyecto(request, pk):
         'from_mis_proyectos': from_mis_proyectos,
         'from_sancionados': from_sancionados,
         'ruta_comisiones': ruta_comisiones,
+        'puede_eliminar': puede_eliminar_proyecto(request.user, proyecto),
     }
 
     return render(request, 'proyectos/detalle_proyecto.html', context)
@@ -663,16 +664,23 @@ def eliminar_actualizacion(request, pk):
     # Si no, redirigir al proyecto
     return redirect('proyectos:detalle_proyecto', pk=proyecto.pk)
 
+def puede_eliminar_proyecto(user, proyecto):
+    """El creador del proyecto o un asesor asignado a la comisión del proyecto."""
+    if user == proyecto.creado_por:
+        return True
+    perfil = getattr(user, 'perfil', None)
+    return (
+        perfil is not None
+        and not perfil.es_diputada
+        and perfil.categorias.filter(pk=proyecto.categoria_id).exists()
+    )
+
 @login_required
 def eliminar_proyecto(request, pk):
     proyecto = get_object_or_404(Proyecto, pk=pk)
     from_mis_proyectos = request.GET.get('from') == 'mis_proyectos'
 
-    # Verificar que el usuario sea el creador del proyecto o sea de su comisión
-    if request.user == proyecto.creado_por or (
-        not request.user.perfil.es_diputada and
-        request.user.perfil.categoria == proyecto.categoria
-    ):
+    if puede_eliminar_proyecto(request.user, proyecto):
         if request.method == 'POST':
             # Obtener todos los ProyectoTemario asociados antes de eliminar
             temarios_afectados = list(proyecto.temarios_asociados.all())
